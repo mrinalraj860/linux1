@@ -6127,19 +6127,19 @@ static vm_fault_t sanitize_fault_flags(struct vm_area_struct *vma,
 // 	if (ret)
 // 		goto out;
 
-// 	if (ret & VM_FAULT_WRITE) {
+// 	if (ret & FAULT_FLAG_WRITE) {
 // 		current->write_faults++;
 // 	}
 // 	if (user_mode(regs)) {
 // 		current->user_faults++;
 // 	}
-// 	if (ret & VM_FAULT_EXEC) {
+// 	if (ret & FAULT_FLAG_INSTRUCTION) {
 // 		current->instruction_faults++;
 // 	}
-// 	if (ret & VM_FAULT_COW) {
+// 	if (ret & VM_FAULT_DONE_COW) {
 // 		current->cow_faults++;
 // 	}
-// 	if (ret & VM_FAULT_MLOCKED) {
+// 	if (ret & VM_FAULT_LOCKED) {
 // 		current->mlocked_faults++;
 // 	}
 
@@ -6240,19 +6240,19 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	lru_gen_exit_fault();
 
 	/* ✅ Increment fault counters AFTER successful fault handling */
-	if (ret & VM_FAULT_WRITE) {
+	if (ret & FAULT_FLAG_WRITE) {
 		current->write_faults++;
 	}
 	if (user_mode(regs)) {
 		current->user_faults++;
 	}
-	if (ret & VM_FAULT_EXEC) {
+	if (ret & FAULT_FLAG_INSTRUCTION) {
 		current->instruction_faults++;
 	}
-	if (ret & VM_FAULT_COW) {
+	if (ret & VM_FAULT_DONE_COW) {
 		current->cow_faults++;
 	}
-	if (ret & VM_FAULT_MLOCKED) {
+	if (ret & VM_FAULT_LOCKED) {
 		current->mlocked_faults++;
 	}
 

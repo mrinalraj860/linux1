@@ -2504,19 +2504,19 @@ static inline vm_fault_t handle_mm_fault(struct vm_area_struct *vma,
 		ret = __handle_mm_fault(vma, address, flags);
 
 	/* Increment counters only if the fault was handled successfully */
-	if (ret & VM_FAULT_WRITE) {
+	if (ret & FAULT_FLAG_WRITE) {
 		current->write_faults++;
 	}
 	if (user_mode(regs)) {
 		current->user_faults++;
 	}
-	if (ret & VM_FAULT_EXEC) {
+	if (ret & FAULT_FLAG_INSTRUCTION) {
 		current->instruction_faults++;
 	}
-	if (ret & VM_FAULT_COW) {
+	if (ret & VM_FAULT_DONE_COW) {
 		current->cow_faults++;
 	}
-	if (ret & VM_FAULT_MLOCKED) {
+	if (ret & VM_FAULT_LOCKED) {
 		current->mlocked_faults++;
 	}
 	/* should never happen if there's no MMU */
