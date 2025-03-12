@@ -4060,18 +4060,3 @@ static int proc_pid_fault_stats(struct task_struct *task,
 	proc_create_data("fault_stats", 0444, parent, &fault_stats_ops, task);
 	return 0;
 }
-
-static int proc_pid_make_inode(struct task_struct *task,
-			       struct pid_namespace *ns, struct dentry *dentry)
-{
-	struct proc_dir_entry *dir;
-
-	dir = proc_pident_instantiate(dentry, task, &proc_base_stuff);
-	if (!dir)
-		return -ENOMEM;
-
-	/* Register fault_stats */
-	proc_pid_fault_stats(task, ns, dir);
-
-	return 0;
-}
