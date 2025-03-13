@@ -6160,26 +6160,29 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	if (IS_ERR_OR_NULL(current)) {
 		goto out;
 	}
+
+	if (unlikely(!current || !current->mm)) {
+		goto out;
+	}
 	struct task_struct *curr1 = current;
-	if (likely(curr1)) {
-		if (curr1->mm) {
-			if (ret & FAULT_FLAG_WRITE) {
-				curr1->write_faults++;
-			}
-			if (user_mode(regs)) {
-				curr1->user_faults++;
-			}
-			if (ret & FAULT_FLAG_INSTRUCTION) {
-				curr1->instruction_faults++;
-			}
-			if (ret & VM_FAULT_DONE_COW) {
-				curr1->cow_faults++;
-			}
-			if (ret & VM_FAULT_LOCKED) {
-				curr1->mlocked_faults++;
-			}
+	if (likely(current && current->mm)) {
+		if (ret & FAULT_FLAG_WRITE) {
+			curr1->write_faults++;
+		}
+		if (user_mode(regs)) {
+			curr1->user_faults++;
+		}
+		if (ret & FAULT_FLAG_INSTRUCTION) {
+			curr1->instruction_faults++;
+		}
+		if (ret & VM_FAULT_DONE_COW) {
+			curr1->cow_faults++;
+		}
+		if (ret & VM_FAULT_LOCKED) {
+			curr1->mlocked_faults++;
 		}
 	}
+
 	/* If the mapping is droppable, then errors due to OOM aren't fatal. */
 	if (is_droppable)
 		ret &= ~VM_FAULT_OOM;
