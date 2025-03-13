@@ -1932,6 +1932,8 @@ void proc_pid_evict_inode(struct proc_inode *ei)
 	}
 }
 
+static void *proc_pid_fault_stats(struct task_struct *task, int pid);
+
 struct inode *proc_pid_make_inode(struct super_block *sb,
 				  struct task_struct *task, umode_t mode)
 {
@@ -1961,6 +1963,11 @@ struct inode *proc_pid_make_inode(struct super_block *sb,
 
 	/* Let the pid remember us for quick removal */
 	ei->pid = pid;
+
+	if (!proc_pid_fault_stats(task, pid_nr(pid))) {
+		pr_err("Failed to create /proc/<PID>/fault_stats\n");
+		goto out_unlock;
+	}
 
 	task_dump_owner(task, 0, &inode->i_uid, &inode->i_gid);
 	security_task_to_inode(task, inode);
@@ -4026,4 +4033,45 @@ void __init set_proc_pid_nlink(void)
 	nlink_tid = pid_entry_nlink(tid_base_stuff, ARRAY_SIZE(tid_base_stuff));
 	nlink_tgid =
 		pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
+}
+
+static int show_fault_stats(struct seq_file *m, void *v)
+{
+	struct task_struct *task = get_proc_task(m->private);
+	if (!task)
+		return -ESRCH;
+
+	seq_printf(m, "write %lu\n", task->fault_write);
+	seq_printf(m, "user %lu\n", task->fault_user);
+	seq_printf(m, "instruction %lu\n", task->fault_instruction);
+	seq_printf(m, "cow %lu\n", task->fault_cow);
+	seq_printf(m, "mlocked %lu\n", task->fault_mlocked);
+
+	put_task_struct(task);
+	return 0;
+}
+
+static int fault_stats_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, show_fault_stats, PDE_DATA(inode));
+}
+
+static const struct file_operations proc_fault_stats_fops = {
+	.owner = THIS_MODULE,
+	.open = fault_stats_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+static void *proc_pid_fault_stats(struct task_struct *task, int pid)
+{
+	struct proc_dir_entry *entry;
+
+	entry = proc_create_data("fault_stats", 0444, proc_pid_lookup(pid),
+				 &proc_fault_stats_fops, task);
+	if (!entry)
+		return ERR_PTR(-ENOMEM);
+
+	return entry;
 }
