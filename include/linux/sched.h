@@ -933,6 +933,7 @@ struct task_struct {
 	struct mm_struct *active_mm;
 	struct address_space *faults_disabled_mapping;
 	//CW
+	struct proc_dir_entry *proc_dir;
 	unsigned long write_faults;
 	unsigned long user_faults;
 	unsigned long instruction_faults;
