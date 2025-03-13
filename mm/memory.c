@@ -6148,21 +6148,24 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	if (IS_ERR_OR_NULL(current)) {
 		goto out;
 	}
-	if (likely(current)) {
-		if (ret & FAULT_FLAG_WRITE) {
-			current->write_faults++;
-		}
-		if (user_mode(regs)) {
-			current->user_faults++;
-		}
-		if (ret & FAULT_FLAG_INSTRUCTION) {
-			current->instruction_faults++;
-		}
-		if (ret & VM_FAULT_DONE_COW) {
-			current->cow_faults++;
-		}
-		if (ret & VM_FAULT_LOCKED) {
-			current->mlocked_faults++;
+	struct task_struct *curr = current;
+	if (likely(curr)) {
+		if (curr->mm) {
+			if (ret & FAULT_FLAG_WRITE) {
+				curr->write_faults++;
+			}
+			if (user_mode(regs)) {
+				curr->user_faults++;
+			}
+			if (ret & FAULT_FLAG_INSTRUCTION) {
+				curr->instruction_faults++;
+			}
+			if (ret & VM_FAULT_DONE_COW) {
+				curr->cow_faults++;
+			}
+			if (ret & VM_FAULT_LOCKED) {
+				curr->mlocked_faults++;
+			}
 		}
 	}
 
