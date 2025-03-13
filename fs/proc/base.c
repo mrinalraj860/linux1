@@ -3299,16 +3299,6 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
 
-#define NOD(NAME, MODE, IOP, FOP, OP) \
-	{                             \
-		.name = NAME,         \
-		.mode = MODE,         \
-		.is_dir = 0,          \
-		.fill_inode = IOP,    \
-		.op = FOP,            \
-		.proc_show = OP,      \
-	}
-
 static const struct pid_entry tgid_base_stuff[] = {
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
