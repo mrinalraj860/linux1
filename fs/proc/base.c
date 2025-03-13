@@ -4081,10 +4081,11 @@ static void *proc_pid_fault_stats(struct task_struct *task, int pid)
 	if (!entry) {
 		pr_warn("proc_create: fault_stats already exists\n");
 		proc_remove(entry);
-		entry = proc_create("fault_stats", 0, NULL, &fault_stats_ops);
+		entry = proc_create("fault_stats", 0, NULL,
+				    &proc_fault_stats_ops);
 		if (!entry) {
 			pr_err("Failed to create /proc/fault_stats\n");
-			return -ENOMEM;
+			return -ESRCH;
 		}
 	}
 
