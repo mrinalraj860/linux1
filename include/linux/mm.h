@@ -2495,34 +2495,11 @@ static inline vm_fault_t handle_mm_fault(struct vm_area_struct *vma,
 					 unsigned int flags,
 					 struct pt_regs *regs)
 {
-	vm_fault_t ret;
-
-	/* Attempt to handle the fault */
-	if (unlikely(is_vm_hugetlb_page(vma)))
-		ret = hugetlb_fault(vma->vm_mm, vma, address, flags);
-	else
-		ret = __handle_mm_fault(vma, address, flags);
-
-	/* Increment counters only if the fault was handled successfully */
-	if (ret & FAULT_FLAG_WRITE) {
-		current->write_faults++;
-	}
-	if (user_mode(regs)) {
-		current->user_faults++;
-	}
-	if (ret & FAULT_FLAG_INSTRUCTION) {
-		current->instruction_faults++;
-	}
-	if (ret & VM_FAULT_DONE_COW) {
-		current->cow_faults++;
-	}
-	if (ret & VM_FAULT_LOCKED) {
-		current->mlocked_faults++;
-	}
 	/* should never happen if there's no MMU */
 	BUG();
 	return VM_FAULT_SIGBUS;
 }
+
 static inline int fixup_user_fault(struct mm_struct *mm, unsigned long address,
 				   unsigned int fault_flags, bool *unlocked)
 {
