@@ -3294,7 +3294,8 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 	return 0;
 }
 #endif /* CONFIG_STACKLEAK_METRICS */
-static int show_fault_stats(struct seq_file *m, void *v);
+static int show_fault_stats(struct seq_file *m, struct pid_namespace *ns,
+			    struct pid *pid, struct task_struct *task);
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
 	struct task_struct *task = PDE(inode)->data;
