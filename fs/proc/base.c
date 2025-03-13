@@ -134,7 +134,9 @@ static const struct constant_table proc_mem_force_table[] __initconst = {
 	{ "never", PROC_MEM_FORCE_NEVER },
 	{}
 };
-static int proc_pid_fault_stats(struct task_struct *task, char *buffer);
+int create_proc_pid_fault_stats(struct task_struct *task,
+				struct pid_namespace *ns,
+				struct proc_dir_entry *parent);
 static int __init early_proc_mem_force_override(char *buf)
 {
 	if (!buf)
@@ -3319,9 +3321,9 @@ static const struct pid_entry tgid_base_stuff[] = {
 	ONE("status", S_IRUGO, proc_pid_status),
 	ONE("personality", S_IRUSR, proc_pid_personality),
 	ONE("limits", S_IRUGO, proc_pid_limits),
-	NOD("fault_stats", S_IRUGO, NULL, &fault_stats_ops, NULL),
+	ONE("fault_stats", S_IRUGO, &fault_stats_ops),
 #ifdef CONFIG_SCHED_DEBUG
-		REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
+	REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
 #endif
 #ifdef CONFIG_SCHED_AUTOGROUP
 	REG("autogroup", S_IRUGO | S_IWUSR,
@@ -4033,21 +4035,22 @@ static int show_fault_stats(struct seq_file *m, void *v)
 {
 	struct task_struct *task = (struct task_struct *)v;
 
-	if (!task)
+	if (!task || !task->mm)
 		return -EINVAL;
 
-	seq_printf(m, "write %lu\n", task->write_faults);
-	seq_printf(m, "user %lu\n", task->user_faults);
-	seq_printf(m, "instruction %lu\n", task->instruction_faults);
-	seq_printf(m, "cow %lu\n", task->cow_faults);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_faults);
+	seq_printf(m, "write %lu\n", task->mm->write_protect_faults);
+	seq_printf(m, "user %lu\n", task->mm->user_faults);
+	seq_printf(m, "instruction %lu\n", task->mm->instruction_faults);
+	seq_printf(m, "cow %lu\n", task->mm->cow_faults);
+	seq_printf(m, "mlocked %lu\n", task->mm->mlocked_faults);
 
 	return 0;
 }
 
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
-	return single_open(file, show_fault_stats, pde_data(inode));
+	struct task_struct *task = PDE(inode)->data;
+	return single_open(file, show_fault_stats, task);
 }
 
 static const struct proc_ops fault_stats_ops = {
@@ -4056,3 +4059,15 @@ static const struct proc_ops fault_stats_ops = {
 	.proc_lseek = seq_lseek,
 	.proc_release = single_release,
 };
+
+// Function to create the proc entry
+int create_proc_pid_fault_stats(struct task_struct *task,
+				struct pid_namespace *ns,
+				struct proc_dir_entry *parent)
+{
+	if (!task || !parent)
+		return -EINVAL;
+
+	proc_create_data("fault_stats", 0444, parent, &fault_stats_ops, task);
+	return 0;
+}
