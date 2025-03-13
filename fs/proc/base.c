@@ -4064,11 +4064,11 @@ static int fault_stats_open(struct inode *inode, struct file *file)
 	return single_open(file, show_fault_stats, file->private_data);
 }
 
-static const struct file_operations proc_fault_stats_fops = {
-	.open = fault_stats_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
+static const struct proc_ops proc_fault_stats_ops = {
+	.proc_open = fault_stats_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = single_release,
 };
 
 static void *proc_pid_fault_stats(struct task_struct *task, int pid)
@@ -4077,7 +4077,7 @@ static void *proc_pid_fault_stats(struct task_struct *task, int pid)
 
 	// Create the fault_stats file under /proc/<PID>
 	entry = proc_create_data("fault_stats", 0444, task->proc_dir,
-				 &proc_fault_stats_fops, task);
+				 &proc_fault_stats_ops, task);
 	if (!entry) {
 		pr_err("Failed to create /proc/%d/fault_stats\n",
 		       task_pid_nr(task));
