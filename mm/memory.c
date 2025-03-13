@@ -6113,87 +6113,6 @@ static vm_fault_t sanitize_fault_flags(struct vm_area_struct *vma,
  * The mmap_lock may have been released depending on flags and our
  * return value.  See filemap_fault() and __folio_lock_or_retry().
  */
-// vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
-// 			   unsigned int flags, struct pt_regs *regs)
-// {
-// 	/* If the fault handler drops the mmap_lock, vma may be freed */
-// 	struct mm_struct *mm = vma->vm_mm;
-// 	vm_fault_t ret;
-// 	bool is_droppable;
-
-// 	__set_current_state(TASK_RUNNING);
-
-// 	ret = sanitize_fault_flags(vma, &flags);
-// 	if (ret)
-// 		goto out;
-
-// 	if (ret & FAULT_FLAG_WRITE) {
-// 		current->write_faults++;
-// 	}
-// 	if (user_mode(regs)) {
-// 		current->user_faults++;
-// 	}
-// 	if (ret & FAULT_FLAG_INSTRUCTION) {
-// 		current->instruction_faults++;
-// 	}
-// 	if (ret & VM_FAULT_DONE_COW) {
-// 		current->cow_faults++;
-// 	}
-// 	if (ret & VM_FAULT_LOCKED) {
-// 		current->mlocked_faults++;
-// 	}
-
-// 	if (!arch_vma_access_permitted(vma, flags & FAULT_FLAG_WRITE,
-// 				       flags & FAULT_FLAG_INSTRUCTION,
-// 				       flags & FAULT_FLAG_REMOTE)) {
-// 		ret = VM_FAULT_SIGSEGV;
-// 		goto out;
-// 	}
-
-// 	is_droppable = !!(vma->vm_flags & VM_DROPPABLE);
-
-// 	/*
-// 	 * Enable the memcg OOM handling for faults triggered in user
-// 	 * space.  Kernel faults are handled more gracefully.
-// 	 */
-// 	if (flags & FAULT_FLAG_USER)
-// 		mem_cgroup_enter_user_fault();
-
-// 	lru_gen_enter_fault(vma);
-
-// 	if (unlikely(is_vm_hugetlb_page(vma)))
-// 		ret = hugetlb_fault(vma->vm_mm, vma, address, flags);
-// 	else
-// 		ret = __handle_mm_fault(vma, address, flags);
-
-// 	/*
-// 	 * Warning: It is no longer safe to dereference vma-> after this point,
-// 	 * because mmap_lock might have been dropped by __handle_mm_fault(), so
-// 	 * vma might be destroyed from underneath us.
-// 	 */
-
-// 	lru_gen_exit_fault();
-
-// 	/* If the mapping is droppable, then errors due to OOM aren't fatal. */
-// 	if (is_droppable)
-// 		ret &= ~VM_FAULT_OOM;
-
-// 	if (flags & FAULT_FLAG_USER) {
-// 		mem_cgroup_exit_user_fault();
-// 		/*
-// 		 * The task may have entered a memcg OOM situation but
-// 		 * if the allocation error was handled gracefully (no
-// 		 * VM_FAULT_OOM), there is no need to kill anything.
-// 		 * Just clean up the OOM state peacefully.
-// 		 */
-// 		if (task_in_memcg_oom(current) && !(ret & VM_FAULT_OOM))
-// 			mem_cgroup_oom_synchronize(false);
-// 	}
-// out:
-// 	mm_account_fault(mm, regs, address, flags, ret);
-
-// 	return ret;
-// }
 vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 			   unsigned int flags, struct pt_regs *regs)
 {
@@ -6208,6 +6127,22 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	if (ret)
 		goto out;
 
+	if (ret & FAULT_FLAG_WRITE) {
+		current->write_faults++;
+	}
+	if (user_mode(regs)) {
+		current->user_faults++;
+	}
+	if (ret & FAULT_FLAG_INSTRUCTION) {
+		current->instruction_faults++;
+	}
+	if (ret & VM_FAULT_DONE_COW) {
+		current->cow_faults++;
+	}
+	if (ret & VM_FAULT_LOCKED) {
+		current->mlocked_faults++;
+	}
+
 	if (!arch_vma_access_permitted(vma, flags & FAULT_FLAG_WRITE,
 				       flags & FAULT_FLAG_INSTRUCTION,
 				       flags & FAULT_FLAG_REMOTE)) {
@@ -6218,9 +6153,9 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	is_droppable = !!(vma->vm_flags & VM_DROPPABLE);
 
 	/*
-* Enable the memcg OOM handling for faults triggered in user
-* space.  Kernel faults are handled more gracefully.
-*/
+	 * Enable the memcg OOM handling for faults triggered in user
+	 * space.  Kernel faults are handled more gracefully.
+	 */
 	if (flags & FAULT_FLAG_USER)
 		mem_cgroup_enter_user_fault();
 
@@ -6232,10 +6167,10 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 		ret = __handle_mm_fault(vma, address, flags);
 
 	/*
-* Warning: It is no longer safe to dereference vma-> after this point,
-* because mmap_lock might have been dropped by __handle_mm_fault(), so
-* vma might be destroyed from underneath us.
-*/
+	 * Warning: It is no longer safe to dereference vma-> after this point,
+	 * because mmap_lock might have been dropped by __handle_mm_fault(), so
+	 * vma might be destroyed from underneath us.
+	 */
 
 	lru_gen_exit_fault();
 	struct task_struct *curr = current;
@@ -6255,7 +6190,6 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	if (ret & VM_FAULT_LOCKED) {
 		curr->mlocked_faults++;
 	}
-
 	/* If the mapping is droppable, then errors due to OOM aren't fatal. */
 	if (is_droppable)
 		ret &= ~VM_FAULT_OOM;
@@ -6263,11 +6197,11 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	if (flags & FAULT_FLAG_USER) {
 		mem_cgroup_exit_user_fault();
 		/*
-* The task may have entered a memcg OOM situation but
-* if the allocation error was handled gracefully (no
-* VM_FAULT_OOM), there is no need to kill anything.
-* Just clean up the OOM state peacefully.
-*/
+		 * The task may have entered a memcg OOM situation but
+		 * if the allocation error was handled gracefully (no
+		 * VM_FAULT_OOM), there is no need to kill anything.
+		 * Just clean up the OOM state peacefully.
+		 */
 		if (task_in_memcg_oom(current) && !(ret & VM_FAULT_OOM))
 			mem_cgroup_oom_synchronize(false);
 	}
@@ -6276,6 +6210,88 @@ out:
 
 	return ret;
 }
+// vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
+// 			   unsigned int flags, struct pt_regs *regs)
+// {
+// 	/* If the fault handler drops the mmap_lock, vma may be freed */
+// 	struct mm_struct *mm = vma->vm_mm;
+// 	vm_fault_t ret;
+// 	bool is_droppable;
+
+// 	__set_current_state(TASK_RUNNING);
+
+// 	ret = sanitize_fault_flags(vma, &flags);
+// 	if (ret)
+// 		goto out;
+
+// 	if (!arch_vma_access_permitted(vma, flags & FAULT_FLAG_WRITE,
+// 				       flags & FAULT_FLAG_INSTRUCTION,
+// 				       flags & FAULT_FLAG_REMOTE)) {
+// 		ret = VM_FAULT_SIGSEGV;
+// 		goto out;
+// 	}
+
+// 	is_droppable = !!(vma->vm_flags & VM_DROPPABLE);
+
+// 	/*
+// * Enable the memcg OOM handling for faults triggered in user
+// * space.  Kernel faults are handled more gracefully.
+// */
+// 	if (flags & FAULT_FLAG_USER)
+// 		mem_cgroup_enter_user_fault();
+
+// 	lru_gen_enter_fault(vma);
+
+// 	if (unlikely(is_vm_hugetlb_page(vma)))
+// 		ret = hugetlb_fault(vma->vm_mm, vma, address, flags);
+// 	else
+// 		ret = __handle_mm_fault(vma, address, flags);
+
+// 	/*
+// * Warning: It is no longer safe to dereference vma-> after this point,
+// * because mmap_lock might have been dropped by __handle_mm_fault(), so
+// * vma might be destroyed from underneath us.
+// */
+
+// 	lru_gen_exit_fault();
+// 	struct task_struct *curr = current;
+// 	/* ✅ Increment fault counters AFTER successful fault handling */
+// 	if (ret & FAULT_FLAG_WRITE) {
+// 		curr->write_faults++;
+// 	}
+// 	if (user_mode(regs)) {
+// 		curr->user_faults++;
+// 	}
+// 	if (ret & FAULT_FLAG_INSTRUCTION) {
+// 		curr->instruction_faults++;
+// 	}
+// 	if (ret & VM_FAULT_DONE_COW) {
+// 		curr->cow_faults++;
+// 	}
+// 	if (ret & VM_FAULT_LOCKED) {
+// 		curr->mlocked_faults++;
+// 	}
+
+// 	/* If the mapping is droppable, then errors due to OOM aren't fatal. */
+// 	if (is_droppable)
+// 		ret &= ~VM_FAULT_OOM;
+
+// 	if (flags & FAULT_FLAG_USER) {
+// 		mem_cgroup_exit_user_fault();
+// 		/*
+// * The task may have entered a memcg OOM situation but
+// * if the allocation error was handled gracefully (no
+// * VM_FAULT_OOM), there is no need to kill anything.
+// * Just clean up the OOM state peacefully.
+// */
+// 		if (task_in_memcg_oom(current) && !(ret & VM_FAULT_OOM))
+// 			mem_cgroup_oom_synchronize(false);
+// 	}
+// out:
+// 	mm_account_fault(mm, regs, address, flags, ret);
+
+// 	return ret;
+// }
 EXPORT_SYMBOL_GPL(handle_mm_fault);
 
 #ifdef CONFIG_LOCK_MM_AND_FIND_VMA
