@@ -3295,6 +3295,13 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 }
 #endif /* CONFIG_STACKLEAK_METRICS */
 
+static const struct proc_ops fault_stats_ops = {
+	.proc_open = fault_stats_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = single_release,
+};
+
 /*
  * Thread groups
  */
@@ -4037,12 +4044,16 @@ static int show_fault_stats(struct seq_file *m, void *v)
 
 	if (!task || !task->mm)
 		return -EINVAL;
-
-	seq_printf(m, "write %lu\n", task->mm->write_protect_faults);
-	seq_printf(m, "user %lu\n", task->mm->user_faults);
-	seq_printf(m, "instruction %lu\n", task->mm->instruction_faults);
-	seq_printf(m, "cow %lu\n", task->mm->cow_faults);
-	seq_printf(m, "mlocked %lu\n", task->mm->mlocked_faults);
+	/*	unsigned long write_faults;
+	unsigned long user_faults;
+	unsigned long instruction_faults;
+	unsigned long cow_faults;
+	unsigned long mlocked_faults;*/
+	seq_printf(m, "write %lu\n", task->write_faults);
+	seq_printf(m, "user %lu\n", task->user_faults);
+	seq_printf(m, "instruction %lu\n", task->instruction_faults);
+	seq_printf(m, "cow %lu\n", task->cow_faults);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_faults);
 
 	return 0;
 }
@@ -4052,13 +4063,6 @@ static int fault_stats_open(struct inode *inode, struct file *file)
 	struct task_struct *task = PDE(inode)->data;
 	return single_open(file, show_fault_stats, task);
 }
-
-static const struct proc_ops fault_stats_ops = {
-	.proc_open = fault_stats_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = single_release,
-};
 
 // Function to create the proc entry
 int create_proc_pid_fault_stats(struct task_struct *task,
