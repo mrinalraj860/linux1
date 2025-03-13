@@ -3700,10 +3700,10 @@ static const struct pid_entry tid_base_stuff[] = {
 	ONE("status", S_IRUGO, proc_pid_status),
 	ONE("personality", S_IRUSR, proc_pid_personality),
 	ONE("limits", S_IRUGO, proc_pid_limits),
-	NOD("fault_stats", S_IRUGO, NULL, &fault_stats_ops, NULL),
 #ifdef CONFIG_SCHED_DEBUG
 	REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
 #endif
+	NOD("fault_stats", S_IRUGO, NULL, &fault_stats_ops, NULL),
 	NOD("comm", S_IFREG | S_IRUGO | S_IWUSR,
 	    &proc_tid_comm_inode_operations, &proc_pid_set_comm_operations, {}),
 #ifdef CONFIG_HAVE_ARCH_TRACEHOOK
