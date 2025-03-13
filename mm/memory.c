@@ -6127,20 +6127,22 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	if (ret)
 		goto out;
 
-	if (ret & FAULT_FLAG_WRITE) {
-		current->write_faults++;
-	}
-	if (user_mode(regs)) {
-		current->user_faults++;
-	}
-	if (ret & FAULT_FLAG_INSTRUCTION) {
-		current->instruction_faults++;
-	}
-	if (ret & VM_FAULT_DONE_COW) {
-		current->cow_faults++;
-	}
-	if (ret & VM_FAULT_LOCKED) {
-		current->mlocked_faults++;
+	if (likely(current)) {
+		if (ret & FAULT_FLAG_WRITE) {
+			current->write_faults++;
+		}
+		if (user_mode(regs)) {
+			current->user_faults++;
+		}
+		if (ret & FAULT_FLAG_INSTRUCTION) {
+			current->instruction_faults++;
+		}
+		if (ret & VM_FAULT_DONE_COW) {
+			current->cow_faults++;
+		}
+		if (ret & VM_FAULT_LOCKED) {
+			current->mlocked_faults++;
+		}
 	}
 
 	if (!arch_vma_access_permitted(vma, flags & FAULT_FLAG_WRITE,
