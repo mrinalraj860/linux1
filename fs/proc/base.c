@@ -134,7 +134,7 @@ static const struct constant_table proc_mem_force_table[] __initconst = {
 	{ "never", PROC_MEM_FORCE_NEVER },
 	{}
 };
-
+static int proc_pid_fault_stats(struct task_struct *task, char *buffer);
 static int __init early_proc_mem_force_override(char *buf)
 {
 	if (!buf)
@@ -4028,34 +4028,69 @@ void __init set_proc_pid_nlink(void)
 	nlink_tgid =
 		pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
 }
-static int show_fault_stats(struct seq_file *m, struct pid_namespace *ns,
-			    struct pid *pid, struct task_struct *task)
-{
-	seq_printf(m, "write %lu\n", task->write_faults);
-	seq_printf(m, "user %lu\n", task->user_faults);
-	seq_printf(m, "instruction %lu\n", task->instruction_faults);
-	seq_printf(m, "cow %lu\n", task->cow_faults);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_faults);
+// static int show_fault_stats(struct seq_file *m, struct pid_namespace *ns,
+// 			    struct pid *pid, struct task_struct *task)
+// {
+// 	seq_printf(m, "write %lu\n", task->write_faults);
+// 	seq_printf(m, "user %lu\n", task->user_faults);
+// 	seq_printf(m, "instruction %lu\n", task->instruction_faults);
+// 	seq_printf(m, "cow %lu\n", task->cow_faults);
+// 	seq_printf(m, "mlocked %lu\n", task->mlocked_faults);
 
+// 	return 0;
+// }
+
+// static int fault_stats_open(struct inode *inode, struct file *file)
+// {
+// 	return single_open(file, show_fault_stats, proc_get_parent_data(inode));
+// }
+
+// static const struct proc_ops fault_stats_ops = {
+// 	.proc_open = fault_stats_open,
+// 	.proc_read = seq_read,
+// 	.proc_lseek = seq_lseek,
+// 	.proc_release = single_release,
+// };
+
+// static int proc_pid_fault_stats(struct task_struct *task,
+// 				struct pid_namespace *ns,
+// 				struct proc_dir_entry *parent)
+// {
+// 	proc_create_data("fault_stats", 0444, parent, &fault_stats_ops, task);
+// 	return 0;
+// }
+
+static int show_fault_stats(struct seq_file *m, void *v)
+{
+	struct task_struct *task = (struct task_struct *)v;
+
+	if (!task)
+		return -EINVAL;
+
+	seq_printf(m, "Fault statistics:\n");
+	// Add actual stats reporting here
 	return 0;
 }
 
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
-	return single_open(file, show_fault_stats, proc_get_parent_data(inode));
+	return single_open(file, show_fault_stats, PDE_DATA(inode));
 }
 
-static const struct proc_ops fault_stats_ops = {
-	.proc_open = fault_stats_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = single_release,
+static const struct file_operations fault_stats_ops = {
+	.open = fault_stats_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
 };
 
 static int proc_pid_fault_stats(struct task_struct *task,
 				struct pid_namespace *ns,
 				struct proc_dir_entry *parent)
 {
+	if (!task || !parent)
+		return -EINVAL;
+
 	proc_create_data("fault_stats", 0444, parent, &fault_stats_ops, task);
 	return 0;
 }
