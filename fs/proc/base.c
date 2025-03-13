@@ -4057,25 +4057,32 @@ static int show_fault_stats(struct seq_file *m, void *v)
 
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
-	return single_open(file, show_fault_stats, PDE_DATA(inode));
+	struct task_struct *task = get_proc_task(inode->i_private);
+	if (!task)
+		return -ESRCH;
+	file->private_data = task;
+	return single_open(file, show_fault_stats, file->private_data);
 }
 
 static const struct file_operations proc_fault_stats_fops = {
-	.owner = THIS_MODULE,
-	.open = fault_stats_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
+	.proc_open = fault_stats_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = single_release,
 };
 
 static void *proc_pid_fault_stats(struct task_struct *task, int pid)
 {
 	struct proc_dir_entry *entry;
 
-	entry = proc_create_data("fault_stats", 0444, proc_pid_lookup(pid),
+	// Create the fault_stats file under /proc/<PID>
+	entry = proc_create_data("fault_stats", 0444, task->proc_dir_entry,
 				 &proc_fault_stats_fops, task);
-	if (!entry)
+	if (!entry) {
+		pr_err("Failed to create /proc/%d/fault_stats\n",
+		       task_pid_nr(task));
 		return ERR_PTR(-ENOMEM);
+	}
 
 	return entry;
 }
