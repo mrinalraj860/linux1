@@ -4085,7 +4085,7 @@ static void *proc_pid_fault_stats(struct task_struct *task, int pid)
 				    &proc_fault_stats_ops);
 		if (!entry) {
 			pr_err("Failed to create /proc/fault_stats\n");
-			return -ESRCH;
+			return;
 		}
 	}
 
