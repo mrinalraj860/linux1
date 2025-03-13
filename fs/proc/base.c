@@ -3747,9 +3747,9 @@ static const struct pid_entry tid_base_stuff[] = {
 #ifdef CONFIG_SCHED_DEBUG
 	REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
 #endif
-	NOD("fault_stats", S_IRUGO, NULL, &fault_stats_ops, NULL),
 	NOD("comm", S_IFREG | S_IRUGO | S_IWUSR,
 	    &proc_tid_comm_inode_operations, &proc_pid_set_comm_operations, {}),
+// NOD("fault_stats", S_IRUGO, NULL, &fault_stats_ops, NULL),
 #ifdef CONFIG_HAVE_ARCH_TRACEHOOK
 	ONE("syscall", S_IRUSR, proc_pid_syscall),
 #endif
