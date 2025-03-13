@@ -4044,17 +4044,12 @@ void __init set_proc_pid_nlink(void)
 		pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
 }
 
-static int show_fault_stats(struct seq_file *m, void *v)
+static int show_fault_stats(struct seq_file *m, struct pid_namespace *ns,
+			    struct pid *pid, struct task_struct *task)
 {
-	struct task_struct *task = (struct task_struct *)v;
-
-	if (!task || !task->mm)
+	if (!task)
 		return -EINVAL;
-	/*	unsigned long write_faults;
-	unsigned long user_faults;
-	unsigned long instruction_faults;
-	unsigned long cow_faults;
-	unsigned long mlocked_faults;*/
+
 	seq_printf(m, "write %lu\n", task->write_faults);
 	seq_printf(m, "user %lu\n", task->user_faults);
 	seq_printf(m, "instruction %lu\n", task->instruction_faults);
