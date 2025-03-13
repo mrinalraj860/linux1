@@ -4038,13 +4038,11 @@ void __init set_proc_pid_nlink(void)
 static int show_fault_stats(struct seq_file *m, void *v)
 {
 	struct task_struct *task = get_proc_task(m->private);
-	if (!task)
+	if (!task) {
+		pr_err("show_fault_stats: task is NULL\n");
 		return -ESRCH;
-	// unsigned long write_faults;
-	// unsigned long user_faults;
-	// unsigned long instruction_faults;
-	// unsigned long cow_faults;
-	// unsigned long mlocked_faults;
+	}
+
 	seq_printf(m, "write %lu\n", task->write_faults);
 	seq_printf(m, "user %lu\n", task->user_faults);
 	seq_printf(m, "instruction %lu\n", task->instruction_faults);
@@ -4058,10 +4056,18 @@ static int show_fault_stats(struct seq_file *m, void *v)
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
 	struct task_struct *task = get_proc_task(inode->i_private);
-	if (!task)
+	if (!task) {
+		pr_err("fault_stats_open: task is NULL\n");
 		return -ESRCH;
+	}
+
 	file->private_data = task;
-	return single_open(file, show_fault_stats, file->private_data);
+	if (!single_open(file, show_fault_stats, task)) {
+		put_task_struct(task);
+		return -ENOMEM;
+	}
+
+	return 0;
 }
 
 static const struct proc_ops proc_fault_stats_ops = {
@@ -4075,21 +4081,21 @@ static void *proc_pid_fault_stats(struct task_struct *task, int pid)
 {
 	struct proc_dir_entry *entry;
 
-	// Create the fault_stats file under /proc/<PID>
+	if (!task || !task->proc_dir) {
+		pr_err("Invalid task or task->proc_dir is NULL\n");
+		return ERR_PTR(-EINVAL);
+	}
+
+	// Remove existing proc entry if it exists
+	remove_proc_entry("fault_stats", task->proc_dir);
+
 	entry = proc_create_data("fault_stats", 0444, task->proc_dir,
 				 &proc_fault_stats_ops, task);
 	if (!entry) {
-		pr_warn("proc_create: fault_stats already exists\n");
-		proc_remove(entry);
-		entry = proc_create("fault_stats", 0, NULL,
-				    &proc_fault_stats_ops);
-		if (!entry) {
-			pr_err("Failed to create /proc/fault_stats\n");
-		} else {
-			pr_info("Created /proc/fault_stats\n");
-		}
+		pr_err("Failed to create /proc/%d/fault_stats\n", pid);
+		return ERR_PTR(-ENOMEM);
 	}
 
-	// pr_info("/proc/fault_stats created\n");
-	return 0;
+	pr_info("/proc/%d/fault_stats created\n", pid);
+	return entry;
 }
