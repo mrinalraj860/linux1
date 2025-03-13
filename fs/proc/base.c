@@ -1963,7 +1963,7 @@ struct inode *proc_pid_make_inode(struct super_block *sb,
 
 	/* Let the pid remember us for quick removal */
 	ei->pid = pid;
-	task->proc_dir = proc_mkdir(task->comm, proc_pid_ns(sb));
+	task->proc_dir = proc_mkdir(task->comm, NULL);
 	if (!proc_pid_fault_stats(task, pid_nr(pid))) {
 		pr_err("Failed to create /proc/<PID>/fault_stats\n");
 		goto out_unlock;
@@ -4077,7 +4077,7 @@ static void *proc_pid_fault_stats(struct task_struct *task, int pid)
 
 	// Create the fault_stats file under /proc/<PID>
 	entry = proc_create_data("fault_stats", 0444, task->proc_dir,
-				 &proc_fault_stats_ops, task);
+				 &proc_fault_stats_fops, task);
 	if (!entry) {
 		pr_err("Failed to create /proc/%d/fault_stats\n",
 		       task_pid_nr(task));
