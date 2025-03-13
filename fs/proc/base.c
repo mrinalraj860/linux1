@@ -4079,10 +4079,15 @@ static void *proc_pid_fault_stats(struct task_struct *task, int pid)
 	entry = proc_create_data("fault_stats", 0444, task->proc_dir,
 				 &proc_fault_stats_ops, task);
 	if (!entry) {
-		pr_err("Failed to create /proc/%d/fault_stats\n",
-		       task_pid_nr(task));
-		return ERR_PTR(-ENOMEM);
+		pr_warn("proc_create: fault_stats already exists\n");
+		proc_remove(entry);
+		entry = proc_create("fault_stats", 0, NULL, &fault_stats_ops);
+		if (!entry) {
+			pr_err("Failed to create /proc/fault_stats\n");
+			return -ENOMEM;
+		}
 	}
 
-	return entry;
+	pr_info("/proc/fault_stats created\n");
+	return 0;
 }
