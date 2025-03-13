@@ -3683,6 +3683,7 @@ static const struct inode_operations proc_tid_comm_inode_operations = {
 /*
  * Tasks
  */
+
 static const struct pid_entry tid_base_stuff[] = {
 	DIR("fd", S_IRUSR | S_IXUSR, proc_fd_inode_operations,
 	    proc_fd_operations),
