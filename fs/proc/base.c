@@ -4085,10 +4085,11 @@ static void *proc_pid_fault_stats(struct task_struct *task, int pid)
 				    &proc_fault_stats_ops);
 		if (!entry) {
 			pr_err("Failed to create /proc/fault_stats\n");
-			return;
+		} else {
+			pr_info("Created /proc/fault_stats\n");
 		}
 	}
 
-	pr_info("/proc/fault_stats created\n");
+	// pr_info("/proc/fault_stats created\n");
 	return 0;
 }
