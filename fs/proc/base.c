@@ -4040,12 +4040,16 @@ static int show_fault_stats(struct seq_file *m, void *v)
 	struct task_struct *task = get_proc_task(m->private);
 	if (!task)
 		return -ESRCH;
-
-	seq_printf(m, "write %lu\n", task->fault_write);
-	seq_printf(m, "user %lu\n", task->fault_user);
-	seq_printf(m, "instruction %lu\n", task->fault_instruction);
-	seq_printf(m, "cow %lu\n", task->fault_cow);
-	seq_printf(m, "mlocked %lu\n", task->fault_mlocked);
+	// unsigned long write_faults;
+	// unsigned long user_faults;
+	// unsigned long instruction_faults;
+	// unsigned long cow_faults;
+	// unsigned long mlocked_faults;
+	seq_printf(m, "write %lu\n", task->write_faults);
+	seq_printf(m, "user %lu\n", task->user_faults);
+	seq_printf(m, "instruction %lu\n", task->instruction_faults);
+	seq_printf(m, "cow %lu\n", task->cow_faults);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_faults);
 
 	put_task_struct(task);
 	return 0;
