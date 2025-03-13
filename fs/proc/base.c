@@ -3299,6 +3299,16 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
 
+#define NOD(NAME, MODE, IOP, FOP, OP) \
+	{                             \
+		.name = NAME,         \
+		.mode = MODE,         \
+		.is_dir = 0,          \
+		.fill_inode = IOP,    \
+		.op = FOP,            \
+		.proc_show = OP,      \
+	}
+
 static const struct pid_entry tgid_base_stuff[] = {
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
@@ -3319,7 +3329,8 @@ static const struct pid_entry tgid_base_stuff[] = {
 	ONE("status", S_IRUGO, proc_pid_status),
 	ONE("personality", S_IRUSR, proc_pid_personality),
 	ONE("limits", S_IRUGO, proc_pid_limits),
-	NOD("fault_stats", S_IRUGO, &fault_stats_ops),
+	NOD("fault_stats", S_IRUGO, proc_fill_inode_nonsensitive,
+	    &fault_stats_ops, NULL),
 #ifdef CONFIG_SCHED_DEBUG
 	REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
 #endif
@@ -4031,28 +4042,28 @@ void __init set_proc_pid_nlink(void)
 
 static int show_fault_stats(struct seq_file *m, void *v)
 {
-    struct task_struct *task = (struct task_struct *)v;
+	struct task_struct *task = (struct task_struct *)v;
 
-    if (!task)
-        return -EINVAL;
+	if (!task)
+		return -EINVAL;
 
-    seq_printf(m, "write %lu\n", task->write_faults);
-    seq_printf(m, "user %lu\n", task->user_faults);
-    seq_printf(m, "instruction %lu\n", task->instruction_faults);
-    seq_printf(m, "cow %lu\n", task->cow_faults);
-    seq_printf(m, "mlocked %lu\n", task->mlocked_faults);
+	seq_printf(m, "write %lu\n", task->write_faults);
+	seq_printf(m, "user %lu\n", task->user_faults);
+	seq_printf(m, "instruction %lu\n", task->instruction_faults);
+	seq_printf(m, "cow %lu\n", task->cow_faults);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_faults);
 
-    return 0;
+	return 0;
 }
 
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
-    return single_open(file, show_fault_stats, pde_data(inode));
+	return single_open(file, show_fault_stats, pde_data(inode));
 }
 
 static const struct proc_ops fault_stats_ops = {
-    .proc_open    = fault_stats_open,
-    .proc_read    = seq_read,
-    .proc_lseek   = seq_lseek,
-    .proc_release = single_release,
+	.proc_open = fault_stats_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = single_release,
 };
