@@ -3319,6 +3319,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 	ONE("status", S_IRUGO, proc_pid_status),
 	ONE("personality", S_IRUSR, proc_pid_personality),
 	ONE("limits", S_IRUGO, proc_pid_limits),
+	ONE("fault_stats", S_IRUGO, proc_pid_fault_stats),
 #ifdef CONFIG_SCHED_DEBUG
 	REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
 #endif
@@ -4027,11 +4028,9 @@ void __init set_proc_pid_nlink(void)
 	nlink_tgid =
 		pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
 }
-
-static int show_fault_stats(struct seq_file *m, void *v)
+static int show_fault_stats(struct seq_file *m, struct pid_namespace *ns,
+			    struct pid *pid, struct task_struct *task)
 {
-	struct task_struct *task = m->private;
-
 	seq_printf(m, "write %lu\n", task->write_faults);
 	seq_printf(m, "user %lu\n", task->user_faults);
 	seq_printf(m, "instruction %lu\n", task->instruction_faults);
