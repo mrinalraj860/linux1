@@ -4060,6 +4060,10 @@ void __init set_proc_pid_nlink(void)
 // 	return 0;
 // }
 
+#include <linux/seq_file.h>
+#include <linux/proc_fs.h>
+#include <linux/sched.h>
+
 static int show_fault_stats(struct seq_file *m, void *v)
 {
 	struct task_struct *task = (struct task_struct *)v;
@@ -4074,14 +4078,14 @@ static int show_fault_stats(struct seq_file *m, void *v)
 
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
-	return single_open(file, show_fault_stats, PDE_DATA(inode));
+	return single_open(file, show_fault_stats, pde_data(inode));
 }
 
-static const struct file_operations fault_stats_ops = {
-	.open = fault_stats_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
+static const struct proc_ops fault_stats_ops = {
+	.proc_open = fault_stats_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = single_release,
 };
 
 static int proc_pid_fault_stats(struct task_struct *task,
