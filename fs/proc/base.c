@@ -4076,7 +4076,7 @@ static void *proc_pid_fault_stats(struct task_struct *task, int pid)
 	struct proc_dir_entry *entry;
 
 	// Create the fault_stats file under /proc/<PID>
-	entry = proc_create_data("fault_stats", 0444, task->proc_dir_entry,
+	entry = proc_create_data("fault_stats", 0444, proc_pid_ns(task),
 				 &proc_fault_stats_fops, task);
 	if (!entry) {
 		pr_err("Failed to create /proc/%d/fault_stats\n",
