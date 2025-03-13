@@ -6145,6 +6145,18 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 
 	lru_gen_enter_fault(vma);
 
+	if (unlikely(is_vm_hugetlb_page(vma)))
+		ret = hugetlb_fault(vma->vm_mm, vma, address, flags);
+	else
+		ret = __handle_mm_fault(vma, address, flags);
+
+	/*
+	* Warning: It is no longer safe to dereference vma-> after this point,
+	* because mmap_lock might have been dropped by __handle_mm_fault(), so
+	* vma might be destroyed from underneath us.
+	*/
+
+	lru_gen_exit_fault();
 	if (IS_ERR_OR_NULL(current)) {
 		goto out;
 	}
@@ -6167,36 +6179,6 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 				curr1->mlocked_faults++;
 			}
 		}
-	}
-
-	if (unlikely(is_vm_hugetlb_page(vma)))
-		ret = hugetlb_fault(vma->vm_mm, vma, address, flags);
-	else
-		ret = __handle_mm_fault(vma, address, flags);
-
-	/*
-	 * Warning: It is no longer safe to dereference vma-> after this point,
-	 * because mmap_lock might have been dropped by __handle_mm_fault(), so
-	 * vma might be destroyed from underneath us.
-	 */
-
-	lru_gen_exit_fault();
-	struct task_struct *curr = current;
-	/* ✅ Increment fault counters AFTER successful fault handling */
-	if (ret & FAULT_FLAG_WRITE) {
-		curr->write_faults++;
-	}
-	if (user_mode(regs)) {
-		curr->user_faults++;
-	}
-	if (ret & FAULT_FLAG_INSTRUCTION) {
-		curr->instruction_faults++;
-	}
-	if (ret & VM_FAULT_DONE_COW) {
-		curr->cow_faults++;
-	}
-	if (ret & VM_FAULT_LOCKED) {
-		curr->mlocked_faults++;
 	}
 	/* If the mapping is droppable, then errors due to OOM aren't fatal. */
 	if (is_droppable)
