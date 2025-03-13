@@ -3320,9 +3320,9 @@ static const struct pid_entry tgid_base_stuff[] = {
 	ONE("personality", S_IRUSR, proc_pid_personality),
 	ONE("limits", S_IRUGO, proc_pid_limits),
 	NOD("fault_stats", S_IRUGO, proc_fill_inode_nonsensitive,
-	    &fault_stats_ops, NULL),
+	    &fault_stats_ops, NULL)
 #ifdef CONFIG_SCHED_DEBUG
-	REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
+		REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
 #endif
 #ifdef CONFIG_SCHED_AUTOGROUP
 	REG("autogroup", S_IRUGO | S_IWUSR,
