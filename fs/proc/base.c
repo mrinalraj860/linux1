@@ -3297,17 +3297,61 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 
 static int show_fault_stats(struct seq_file *m, struct pid_namespace *ns,
 			    struct pid *pid, struct task_struct *task);
-static int fault_stats_open(struct inode *inode, struct file *file)
+struct fault_stats_data {
+	struct pid_namespace *ns;
+	struct pid *pid;
+	struct task_struct *task;
+};
+
+static int show_fault_stats_wrapper(struct seq_file *m, void *v)
 {
-	struct task_struct *task = PDE(inode)->data;
-	return single_open(file, show_fault_stats, task);
+	struct fault_stats_data *data = (struct fault_stats_data *)v;
+
+	if (!data || !data->task)
+		return -EINVAL;
+
+	return show_fault_stats(m, data->ns, data->pid, data->task);
 }
 
-static const struct proc_ops fault_stats_ops = {
-	.proc_open = fault_stats_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = single_release,
+static int fault_stats_open(struct inode *inode, struct file *file)
+{
+	struct fault_stats_data *data;
+	struct task_struct *task = pde_data(inode);
+	struct pid_namespace *ns = task_active_pid_ns(task);
+	struct pid *pid = get_task_pid(task, PIDTYPE_PID);
+
+	if (!task || !ns || !pid)
+		return -EINVAL;
+
+	data = kmalloc(sizeof(*data), GFP_KERNEL);
+	if (!data)
+		return -ENOMEM;
+
+	data->task = task;
+	data->ns = ns;
+	data->pid = pid;
+
+	return single_open(file, show_fault_stats_wrapper, data);
+}
+
+static int fault_stats_release(struct inode *inode, struct file *file)
+{
+	struct fault_stats_data *data =
+		((struct seq_file *)file->private_data)->private;
+
+	if (data) {
+		put_pid(data->pid);
+		kfree(data);
+	}
+
+	return single_release(file);
+}
+
+static const struct file_operations fault_stats_ops = {
+	.open = fault_stats_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = fault_stats_release,
 };
 
 /*
