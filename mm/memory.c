@@ -6238,22 +6238,22 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 */
 
 	lru_gen_exit_fault();
-
+	struct task_struct *curr = current;
 	/* ✅ Increment fault counters AFTER successful fault handling */
 	if (ret & FAULT_FLAG_WRITE) {
-		current->write_faults++;
+		curr->write_faults++;
 	}
 	if (user_mode(regs)) {
-		current->user_faults++;
+		curr->user_faults++;
 	}
 	if (ret & FAULT_FLAG_INSTRUCTION) {
-		current->instruction_faults++;
+		curr->instruction_faults++;
 	}
 	if (ret & VM_FAULT_DONE_COW) {
-		current->cow_faults++;
+		curr->cow_faults++;
 	}
 	if (ret & VM_FAULT_LOCKED) {
-		current->mlocked_faults++;
+		curr->mlocked_faults++;
 	}
 
 	/* If the mapping is droppable, then errors due to OOM aren't fatal. */
