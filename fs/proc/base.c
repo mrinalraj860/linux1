@@ -1932,8 +1932,6 @@ void proc_pid_evict_inode(struct proc_inode *ei)
 	}
 }
 
-static void *proc_pid_fault_stats(struct task_struct *task, int pid);
-
 struct inode *proc_pid_make_inode(struct super_block *sb,
 				  struct task_struct *task, umode_t mode)
 {
@@ -1963,11 +1961,6 @@ struct inode *proc_pid_make_inode(struct super_block *sb,
 
 	/* Let the pid remember us for quick removal */
 	ei->pid = pid;
-	task->proc_dir = proc_mkdir(task->comm, NULL);
-	if (!proc_pid_fault_stats(task, pid_nr(pid))) {
-		pr_err("Failed to create /proc/<PID>/fault_stats\n");
-		goto out_unlock;
-	}
 
 	task_dump_owner(task, 0, &inode->i_uid, &inode->i_gid);
 	security_task_to_inode(task, inode);
@@ -4033,69 +4026,4 @@ void __init set_proc_pid_nlink(void)
 	nlink_tid = pid_entry_nlink(tid_base_stuff, ARRAY_SIZE(tid_base_stuff));
 	nlink_tgid =
 		pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
-}
-
-static int show_fault_stats(struct seq_file *m, void *v)
-{
-	struct task_struct *task = get_proc_task(m->private);
-	if (!task) {
-		pr_err("show_fault_stats: task is NULL\n");
-		return -ESRCH;
-	}
-
-	seq_printf(m, "write %lu\n", task->write_faults);
-	seq_printf(m, "user %lu\n", task->user_faults);
-	seq_printf(m, "instruction %lu\n", task->instruction_faults);
-	seq_printf(m, "cow %lu\n", task->cow_faults);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_faults);
-
-	put_task_struct(task);
-	return 0;
-}
-
-static int fault_stats_open(struct inode *inode, struct file *file)
-{
-	struct task_struct *task = get_proc_task(inode->i_private);
-	if (!task) {
-		pr_err("fault_stats_open: task is NULL\n");
-		return -ESRCH;
-	}
-
-	file->private_data = task;
-	if (!single_open(file, show_fault_stats, task)) {
-		put_task_struct(task);
-		return -ENOMEM;
-	}
-
-	return 0;
-}
-
-static const struct proc_ops proc_fault_stats_ops = {
-	.proc_open = fault_stats_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = single_release,
-};
-
-static void *proc_pid_fault_stats(struct task_struct *task, int pid)
-{
-	struct proc_dir_entry *entry;
-
-	if (!task || !task->proc_dir) {
-		pr_err("Invalid task or task->proc_dir is NULL\n");
-		return ERR_PTR(-EINVAL);
-	}
-
-	// Remove existing proc entry if it exists
-	remove_proc_entry("fault_stats", task->proc_dir);
-
-	entry = proc_create_data("fault_stats", 0444, task->proc_dir,
-				 &proc_fault_stats_ops, task);
-	if (!entry) {
-		pr_err("Failed to create /proc/%d/fault_stats\n", pid);
-		return ERR_PTR(-ENOMEM);
-	}
-
-	pr_info("/proc/%d/fault_stats created\n", pid);
-	return entry;
 }
