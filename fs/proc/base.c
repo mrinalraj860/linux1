@@ -501,6 +501,27 @@ static int proc_pid_stack(struct seq_file *m, struct pid_namespace *ns,
 }
 #endif
 
+static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
+			    struct pid *pid, struct task_struct *task)
+{
+	if (unlikely(!task)) {
+		// If task is NULL or invalid, return zeros
+		seq_printf(m, "write 0\n");
+		seq_printf(m, "user 0\n");
+		seq_printf(m, "instruction 0\n");
+		seq_printf(m, "cow 0\n");
+		seq_printf(m, "mlocked 0\n");
+	} else {
+		// Output actual fault statistics if task is valid
+		seq_printf(m, "write %lu\n", task->write_fault);
+		seq_printf(m, "user %lu\n", task->user_fault);
+		seq_printf(m, "instruction %lu\n", task->instruction_fault);
+		seq_printf(m, "cow %lu\n", task->cow_fault);
+		seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
+	}
+	return 0;
+}
+
 #ifdef CONFIG_SCHED_INFO
 /*
   * Provides /proc/PID/schedstat
@@ -3357,6 +3378,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 	ONE("status", S_IRUGO, proc_pid_status),
 	ONE("personality", S_IRUSR, proc_pid_personality),
 	ONE("limits", S_IRUGO, proc_pid_limits),
+	One("fault_stats", S_IRUGO, fault_stats_show),
 #ifdef CONFIG_SCHED_DEBUG
 	REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
 #endif
@@ -3721,6 +3743,7 @@ static const struct pid_entry tid_base_stuff[] = {
 	ONE("status", S_IRUGO, proc_pid_status),
 	ONE("personality", S_IRUSR, proc_pid_personality),
 	ONE("limits", S_IRUGO, proc_pid_limits),
+	One("fault_stats", S_IRUGO, fault_stats_show),
 #ifdef CONFIG_SCHED_DEBUG
 	REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
 #endif
