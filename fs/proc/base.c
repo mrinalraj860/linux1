@@ -3342,7 +3342,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 		.name = "fault_stats",
 		.len = sizeof("fault_stats") - 1,
 		.mode = S_IRUGO,
-		.op.proc = proc_pid_fault_stats,
+		.proc = proc_pid_fault_stats,
 	},
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
