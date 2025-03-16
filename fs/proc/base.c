@@ -3338,7 +3338,12 @@ static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
 
 static const struct pid_entry tgid_base_stuff[] = {
-	NOD("fault_stats", S_IRUGO, proc_pid_fault_stats),
+	{
+		.name = "fault_stats",
+		.len = sizeof("fault_stats") - 1,
+		.mode = S_IRUGO,
+		.op.proc = proc_pid_fault_stats,
+	},
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
 	DIR("fd", S_IRUSR | S_IXUSR, proc_fd_inode_operations,
