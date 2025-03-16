@@ -1,3 +1,36 @@
+
+static int fault_stats_show(struct seq_file *m, void *v)
+{
+    struct task_struct *task = m->private;
+
+    if (!task)
+        return -ENOENT;
+
+    seq_printf(m, "write %lu\n", task->write_fault);
+    seq_printf(m, "user %lu\n", task->user_fault);
+    seq_printf(m, "instruction %lu\n", task->instruction_fault);
+    seq_printf(m, "cow %lu\n", task->cow_fault);
+    seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
+
+    return 0;
+}
+
+
+static const struct seq_operations fault_stats_seq_ops = {
+    .show = fault_stats_show,
+};
+
+static int fault_stats_open(struct inode *inode, struct file *file)
+{
+    return seq_open_private(file, &fault_stats_seq_ops, sizeof(struct task_struct));
+}
+
+static const struct proc_ops fault_stats_proc_ops = {
+    .proc_open = fault_stats_open,
+    .proc_read = seq_read,
+    .proc_lseek = seq_lseek,
+    .proc_release = seq_release_private,
+};
 // SPDX-License-Identifier: GPL-2.0
 /*
  *  linux/fs/proc/base.c
@@ -1932,7 +1965,11 @@ void proc_pid_evict_inode(struct proc_inode *ei)
 	}
 }
 
-struct inode *proc_pid_make_inode(struct super_block *sb,
+struct inode *
+if (!proc_create("fault_stats", 0444, proc_pid, &fault_stats_proc_ops))
+    goto out;
+
+proc_pid_make_inode(struct super_block *sb,
 				  struct task_struct *task, umode_t mode)
 {
 	struct inode *inode;
@@ -3292,6 +3329,37 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 	return 0;
 }
 #endif /* CONFIG_STACKLEAK_METRICS */
+//CW
+static int fault_stats_show(struct seq_file *m, void *v)
+{
+	struct task_struct *task = m->private;
+	if (!task)
+		return -ENOENT;
+	seq_printf(m, "write %lu\n", task->write_fault);
+	seq_printf(m, "user %lu\n", task->user_fault);
+	seq_printf(m, "instruction %lu\n", task->instruction_fault);
+	seq_printf(m, "cow %lu\n", task->cow_fault);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
+	return 0;
+}
+
+static const struct seq_operations fault_stats_seq_ops = {
+	.show = fault_stats_show,
+};
+
+static int fault_stats_open(struct inode *inode, struct file *file)
+{
+	return seq_open_private(file, &fault_stats_seq_ops,
+				sizeof(struct task_struct));
+}
+
+static const struct proc_ops fault_stats_proc_ops = {
+	.proc_open = fault_stats_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = seq_release_private,
+};
+
 
 static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
@@ -3663,49 +3731,6 @@ static const struct inode_operations proc_tid_comm_inode_operations = {
 /*
   * Tasks
   */
-
-static int fault_stats_show(struct seq_file *m, void *v)
-{
-	struct task_struct *task = m->private;
-
-	if (!task)
-		return -ENOENT;
-
-	seq_printf(m, "write %lu\n", task->write_fault);
-	seq_printf(m, "user %lu\n", task->user_fault);
-	seq_printf(m, "instruction %lu\n", task->instruction_fault);
-	seq_printf(m, "cow %lu\n", task->cow_fault);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
-
-	return 0;
-}
-
-/* 
-   * Step 2: Define seq_operations for fault_stats 
-   */
-static const struct seq_operations fault_stats_seq_ops = {
-	.show = fault_stats_show,
-};
-
-/* 
-   * Step 3: Define file open function 
-   */
-static int fault_stats_open(struct inode *inode, struct file *file)
-{
-	return seq_open_private(file, &fault_stats_seq_ops,
-				sizeof(struct task_struct));
-}
-
-/* 
-   * Step 4: Define file operations for proc entry 
-   */
-static const struct proc_ops fault_stats_proc_ops = {
-	.proc_open = fault_stats_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = seq_release_private,
-};
-
 static const struct pid_entry tid_base_stuff[] = {
 	DIR("fd", S_IRUSR | S_IXUSR, proc_fd_inode_operations,
 	    proc_fd_operations),
@@ -3854,8 +3879,7 @@ static struct dentry *proc_task_instantiate(struct dentry *dentry,
 
 	set_nlink(inode, nlink_tid);
 	pid_update_inode(task, inode);
-	//CW
-	proc_create("fault_stats", 0444, dentry, &fault_stats_proc_ops);
+
 	d_set_d_op(dentry, &pid_dentry_operations);
 	return d_splice_alias(inode, dentry);
 }
