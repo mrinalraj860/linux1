@@ -3325,12 +3325,11 @@ static const struct file_operations task_fault_stats_fops = {
 	.release = single_release,
 };
 
-static int proc_task_fault_stats(struct task_struct *task,
-				 struct pid_namespace *ns,
-				 struct dentry *dentry)
+static int proc_task_fault_stats(struct seq_file *m, struct pid_namespace *ns,
+				 struct pid *pid, struct task_struct *task)
 {
-	proc_create_data("fault_stats", 0444, dentry, &task_fault_stats_fops,
-			 task);
+	proc_create_data("fault_stats", 0444, task->proc_dir,
+			 &task_fault_stats_fops, task);
 	return 0;
 }
 
