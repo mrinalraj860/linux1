@@ -3857,12 +3857,14 @@ static struct dentry *proc_task_instantiate(struct dentry *dentry,
 	//CW
 	struct proc_dir_entry *proc_pid;
 	proc_pid = proc_mkdir(dentry->d_name.name, NULL);
-
-	/* ✅ Register the fault_stats file under /proc/<PID>/ */
-	if (task->proc_dir) {
-		proc_create("fault_stats", 0444, task->proc_dir,
+	struct proc_dir_entry *proc_pid;
+	proc_pid = proc_pid_lookup(task->tgid);
+	if (proc_pid) {
+		/* ✅ Register the fault_stats file under /proc/<PID> */
+		proc_create("fault_stats", 0444, proc_pid,
 			    &fault_stats_proc_ops);
 	}
+
 	d_set_d_op(dentry, &pid_dentry_operations);
 	return d_splice_alias(inode, dentry);
 }
