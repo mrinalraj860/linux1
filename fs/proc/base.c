@@ -3859,9 +3859,10 @@ static struct dentry *proc_task_instantiate(struct dentry *dentry,
 	proc_pid = proc_mkdir(dentry->d_name.name, NULL);
 
 	/* ✅ Register the fault_stats file under /proc/<PID>/ */
-	if (proc_pid)
-		proc_create("fault_stats", 0444, proc_pid,
+	if (task->proc_dir) {
+		proc_create("fault_stats", 0444, task->proc_dir,
 			    &fault_stats_proc_ops);
+	}
 	d_set_d_op(dentry, &pid_dentry_operations);
 	return d_splice_alias(inode, dentry);
 }
