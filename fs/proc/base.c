@@ -3299,12 +3299,17 @@ static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
 {
 	if (!task)
 		return -ENOENT;
-	seq_printf(m, "write %lu\n", task->fault_counts.write_faults);
-	seq_printf(m, "user %lu\n", task->fault_counts.user_faults);
-	seq_printf(m, "instruction %lu\n",
-		   task->fault_counts.instruction_faults);
-	seq_printf(m, "cow %lu\n", task->fault_counts.cow_faults);
-	seq_printf(m, "mlocked %lu\n", task->fault_counts.mlocked_faults);
+
+	// unsigned long write_fault;
+	// unsigned long user_fault;
+	// unsigned long instruction_fault;
+	// unsigned long cow_fault;
+	// unsigned long mlocked_fault;
+	seq_printf(m, "write %lu\n", task->write_fault);
+	seq_printf(m, "user %lu\n", task->user_fault);
+	seq_printf(m, "instruction %lu\n", task->instruction_fault);
+	seq_printf(m, "cow %lu\n", task->cow_fault);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
 	return 0;
 }
 
