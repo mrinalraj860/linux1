@@ -3292,7 +3292,10 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 	return 0;
 }
 #endif /* CONFIG_STACKLEAK_METRICS */
-
+//CW
+static int proc_pid_fault_stats(struct task_struct *task,
+				struct pid_namespace *ns,
+				struct proc_dir_entry *dir);
 /*
   * Thread groups
   */
