@@ -3312,7 +3312,8 @@ static const struct seq_operations fault_stats_seq_ops = {
 
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
-	return seq_open_private(file, &fault_stats_seq_ops, PDE_TASK(inode));
+	return seq_open_private(file, &fault_stats_seq_ops,
+				sizeof(struct task_struct));
 }
 
 static const struct proc_ops fault_stats_proc_ops = {
