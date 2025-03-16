@@ -3294,14 +3294,13 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 #endif /* CONFIG_STACKLEAK_METRICS */
 //CW
 
-static int proc_pid_fault_stats(struct task_struct *task,
-				struct pid_namespace *ns,
-				struct proc_dir_entry *dir);
+// static int proc_pid_fault_stats(struct task_struct *task,
+// 				struct pid_namespace *ns,
+// 				struct proc_dir_entry *dir);
 
-static int fault_stats_show(struct seq_file *m, void *v)
+static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
+			    struct pid *pid, struct task_struct *task)
 {
-	struct task_struct *task = m->private;
-
 	seq_printf(m, "write %lu\n", task->write_fault);
 	seq_printf(m, "user %lu\n", task->user_fault);
 	seq_printf(m, "instruction %lu\n", task->instruction_fault);
@@ -3342,7 +3341,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 		.name = "fault_stats",
 		.len = sizeof("fault_stats") - 1,
 		.mode = S_IRUGO,
-		.proc = proc_pid_fault_stats,
+		.op.proc_show = fault_stats_show,
 	},
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
@@ -4072,10 +4071,10 @@ void __init set_proc_pid_nlink(void)
 		pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
 }
 
-static int proc_pid_fault_stats(struct task_struct *task,
-				struct pid_namespace *ns,
-				struct proc_dir_entry *dir)
-{
-	proc_create_data("fault_stats", 0444, dir, &fault_stats_proc_ops, task);
-	return 0;
-}
+// static int proc_pid_fault_stats(struct task_struct *task,
+// 				struct pid_namespace *ns,
+// 				struct proc_dir_entry *dir)
+// {
+// 	proc_create_data("fault_stats", 0444, dir, &fault_stats_proc_ops, task);
+// 	return 0;
+// }
