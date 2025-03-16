@@ -3294,7 +3294,6 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 #endif /* CONFIG_STACKLEAK_METRICS */
 //CW
 
-
 static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
 			    struct pid *pid, struct task_struct *task)
 {
@@ -3308,7 +3307,7 @@ static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
 }
 
 static const struct proc_ops fault_stats_proc_ops = {
-	.proc_show = fault_stats_show,
+	.op.proc_show = fault_stats_show,
 	.proc_open = seq_open, // Use seq_open for seq_printf
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
