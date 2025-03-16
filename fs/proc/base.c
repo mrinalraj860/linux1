@@ -3501,7 +3501,8 @@ static int fault_stats_show(struct seq_file *m, void *v)
 
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
-	return single_open(file, fault_stats_show, PDE_DATA(inode));
+	struct task_struct *task = PDE(inode)->data; // ✅ Use PDE(inode)->data
+	return single_open(file, fault_stats_show, task);
 }
 
 static const struct proc_ops fault_stats_proc_ops = {
