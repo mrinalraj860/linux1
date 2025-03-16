@@ -3317,19 +3317,23 @@ static int fault_stats_show(struct seq_file *m, void *v)
 // 	struct task_struct *task = PDE(inode)->data; // ✅ Use PDE(inode)->data
 // 	return single_open(file, fault_stats_show, task);
 // }
-static const struct file_operations task_fault_stats_fops = {
-	.owner = THIS_MODULE,
-	.open = fault_stats_show,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
+static const struct proc_ops task_fault_stats_ops = {
+	.proc_open = fault_stats_show,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = single_release,
 };
 
 static int proc_task_fault_stats(struct seq_file *m, struct pid_namespace *ns,
 				 struct pid *pid, struct task_struct *task)
 {
-	proc_create_data("fault_stats", 0444, task->proc_dir,
-			 &task_fault_stats_fops, task);
+	struct proc_dir_entry *entry;
+
+	entry = proc_create_data("fault_stats", 0444, proc_pid_make_inode(task),
+				 &task_fault_stats_ops, task);
+	if (!entry)
+		return -ENOMEM;
+
 	return 0;
 }
 
