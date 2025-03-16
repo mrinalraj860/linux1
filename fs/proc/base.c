@@ -4043,11 +4043,11 @@ static int show_fault_stats(struct seq_file *m, void *v)
 		return -ESRCH;
 	}
 
-	seq_printf(m, "write %lu\n", task->write_faults);
-	seq_printf(m, "user %lu\n", task->user_faults);
-	seq_printf(m, "instruction %lu\n", task->instruction_faults);
-	seq_printf(m, "cow %lu\n", task->cow_faults);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_faults);
+	seq_printf(m, "write %lu\n", task->write_fault);
+	seq_printf(m, "user %lu\n", task->user_fault);
+	seq_printf(m, "instruction %lu\n", task->instruction_fault);
+	seq_printf(m, "cow %lu\n", task->cow_fault);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
 
 	put_task_struct(task);
 	return 0;
