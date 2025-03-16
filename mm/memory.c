@@ -4814,7 +4814,7 @@ static vm_fault_t do_anonymous_page(struct vm_fault *vmf)
 
 	//CW
 	if (vmf->vma->vm_flags & VM_LOCKED) {
-		vmf->vma->vm_mm->owner->mlocked_fault++
+		vmf->vma->vm_mm->owner->mlocked_fault++;
 	}
 	/* Use the zero-page for reads */
 	if (!(vmf->flags & FAULT_FLAG_WRITE) &&
