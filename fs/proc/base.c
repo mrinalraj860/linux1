@@ -3312,11 +3312,6 @@ static int fault_stats_show(struct seq_file *m, void *v)
 	return 0;
 }
 
-// static int fault_stats_open(struct inode *inode, struct file *file)
-// {
-// 	struct task_struct *task = PDE(inode)->data; // ✅ Use PDE(inode)->data
-// 	return single_open(file, fault_stats_show, task);
-// }
 static const struct proc_ops task_fault_stats_ops = {
 	.proc_open = fault_stats_show,
 	.proc_read = seq_read,
@@ -3336,6 +3331,10 @@ static int proc_task_fault_stats(struct seq_file *m, struct pid_namespace *ns,
 
 	return 0;
 }
+
+static const struct pid_entry tgid_base_stuff[] = {
+	TGID_ENTRY("fault_stats", S_IRUGO, proc_task_fault_stats),
+};
 
 static const struct pid_entry tgid_base_stuff[] = {
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
