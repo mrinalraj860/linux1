@@ -3529,8 +3529,23 @@ static struct dentry *proc_pid_instantiate(struct dentry *dentry,
 	struct proc_dir_entry *proc_pid = PDE(inode);
 
 	// Create your custom entry "fault_stats":
-	proc_create_data("fault_stats", 0444, proc_pid, &fault_stats_proc_ops,
-			 task);
+	struct proc_dir_entry *proc_pid;
+	proc_pid = task->group_leader->self->proc_dir;
+	if (proc_pid) {
+		struct proc_dir_entry *entry;
+		entry = proc_create("fault_stats", 0444, proc_pid,
+				    &fault_stats_proc_ops);
+		if (entry) {
+			proc_set_user(entry, GLOBAL_ROOT_UID, GLOBAL_ROOT_GID);
+			proc_set_size(entry, 0);
+			PDE(entry)->data =
+				task; // ✅ Store task_struct for retrieval
+			pr_info("Created /proc/%d/fault_stats\n", task->pid);
+		} else {
+			pr_err("Failed to create /proc/%d/fault_stats\n",
+			       task->pid);
+		}
+	}
 
 	set_nlink(inode, nlink_tgid);
 	pid_update_inode(task, inode);
