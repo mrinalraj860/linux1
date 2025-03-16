@@ -4814,7 +4814,7 @@ static vm_fault_t do_anonymous_page(struct vm_fault *vmf)
 
 	//CW
 	if (vmf->vma->vm_flags & VM_LOCKED) {
-		vmf->vma->vm_mm->owner->mlocked_fault++;
+		current->mlocked_fault++;
 	}
 	/* Use the zero-page for reads */
 	if (!(vmf->flags & FAULT_FLAG_WRITE) &&
@@ -5400,7 +5400,7 @@ static vm_fault_t do_cow_fault(struct vm_fault *vmf)
 	__folio_mark_uptodate(folio);
 
 	ret |= finish_fault(vmf);
-	vmf->vma->vm_mm->owner->cow_fault++;
+	current->cow_fault++;
 unlock:
 	unlock_page(vmf->page);
 	put_page(vmf->page);
