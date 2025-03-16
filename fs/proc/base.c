@@ -3296,6 +3296,44 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
 
+static int fault_stats_show(struct seq_file *m, void *v)
+{
+	struct task_struct *task = m->private;
+
+	if (!task)
+		return -ENOENT;
+
+	seq_printf(m, "write %lu\n", task->write_fault);
+	seq_printf(m, "user %lu\n", task->user_fault);
+	seq_printf(m, "instruction %lu\n", task->instruction_fault);
+	seq_printf(m, "cow %lu\n", task->cow_fault);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
+
+	return 0;
+}
+
+// static int fault_stats_open(struct inode *inode, struct file *file)
+// {
+// 	struct task_struct *task = PDE(inode)->data; // ✅ Use PDE(inode)->data
+// 	return single_open(file, fault_stats_show, task);
+// }
+static const struct file_operations task_fault_stats_fops = {
+	.owner = THIS_MODULE,
+	.open = fault_stats_show,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+static int proc_task_fault_stats(struct task_struct *task,
+				 struct pid_namespace *ns,
+				 struct dentry *dentry)
+{
+	proc_create_data("fault_stats", 0444, dentry, &task_fault_stats_fops,
+			 task);
+	return 0;
+}
+
 static const struct pid_entry tgid_base_stuff[] = {
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
@@ -3311,6 +3349,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 	DIR("net", S_IRUGO | S_IXUGO, proc_net_inode_operations,
 	    proc_net_operations),
 #endif
+	ONE("fault_stats", S_IRUGO, proc_task_fault_stats),
 	REG("environ", S_IRUSR, proc_environ_operations),
 	REG("auxv", S_IRUSR, proc_auxv_operations),
 	ONE("status", S_IRUGO, proc_pid_status),
@@ -3482,35 +3521,6 @@ void proc_flush_pid(struct pid *pid)
 {
 	proc_invalidate_siblings_dcache(&pid->inodes, &pid->lock);
 }
-
-static int fault_stats_show(struct seq_file *m, void *v)
-{
-	struct task_struct *task = m->private;
-
-	if (!task)
-		return -ENOENT;
-
-	seq_printf(m, "write %lu\n", task->write_fault);
-	seq_printf(m, "user %lu\n", task->user_fault);
-	seq_printf(m, "instruction %lu\n", task->instruction_fault);
-	seq_printf(m, "cow %lu\n", task->cow_fault);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
-
-	return 0;
-}
-
-static int fault_stats_open(struct inode *inode, struct file *file)
-{
-	struct task_struct *task = PDE(inode)->data; // ✅ Use PDE(inode)->data
-	return single_open(file, fault_stats_show, task);
-}
-
-static const struct proc_ops fault_stats_proc_ops = {
-	.proc_open = fault_stats_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = single_release,
-};
 
 static struct dentry *proc_pid_instantiate(struct dentry *dentry,
 					   struct task_struct *task,
