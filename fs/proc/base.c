@@ -3298,9 +3298,9 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 // 				struct pid_namespace *ns,
 // 				struct proc_dir_entry *dir);
 
-static int fault_stats_wrapper(struct seq_file *m, void *v)
+static int fault_stats_wrapper(struct seq_file *m, struct pid_namespace *ns,
+			       struct pid *pid, struct task_struct *task)
 {
-	struct task_struct *task = (struct task_struct *)v;
 	seq_printf(m, "write %lu\n", task->write_fault);
 	seq_printf(m, "user %lu\n", task->user_fault);
 	seq_printf(m, "instruction %lu\n", task->instruction_fault);
@@ -3309,6 +3309,7 @@ static int fault_stats_wrapper(struct seq_file *m, void *v)
 
 	return 0;
 }
+
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
 	return single_open(file, fault_stats_wrapper,
@@ -3324,7 +3325,6 @@ static int fault_stats_open(struct inode *inode, struct file *file)
 // };
 
 static const struct proc_ops fault_stats_proc_ops = {
-	.proc_open = fault_stats_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = single_release,
