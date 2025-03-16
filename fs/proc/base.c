@@ -3847,10 +3847,14 @@ static struct dentry *proc_task_instantiate(struct dentry *dentry,
 	pid_update_inode(task, inode);
 	//CW
 	struct proc_dir_entry *proc_pid;
-	proc_pid = pid_task_proc(task);
+	/* ✅ Create the parent directory under /proc/<PID> */
+	proc_pid = proc_mkdir(dentry->d_name.name, NULL);
 	if (proc_pid) {
+		/* ✅ Register the fault_stats file under /proc/<PID> */
 		proc_create("fault_stats", 0444, proc_pid,
 			    &fault_stats_proc_ops);
+	} else {
+		pr_err("Failed to create /proc/<PID> directory\n");
 	}
 
 	d_set_d_op(dentry, &pid_dentry_operations);
