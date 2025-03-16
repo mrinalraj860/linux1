@@ -3297,22 +3297,25 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
 			    struct pid *pid, struct task_struct *task)
 {
-	seq_printf(m, "write %lu\n", task->write_fault);
-	seq_printf(m, "user %lu\n", task->user_fault);
-	seq_printf(m, "instruction %lu\n", task->instruction_fault);
-	seq_printf(m, "cow %lu\n", task->cow_fault);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
-
+	if (!task)
+		return -ENOENT;
+	seq_printf(m, "write %lu\n", task->fault_counts.write_faults);
+	seq_printf(m, "user %lu\n", task->fault_counts.user_faults);
+	seq_printf(m, "instruction %lu\n",
+		   task->fault_counts.instruction_faults);
+	seq_printf(m, "cow %lu\n", task->fault_counts.cow_faults);
+	seq_printf(m, "mlocked %lu\n", task->fault_counts.mlocked_faults);
 	return 0;
 }
 
 static const struct proc_ops fault_stats_proc_ops = {
-	.op.proc_show = fault_stats_show,
-	.proc_open = seq_open, // Use seq_open for seq_printf
+	.proc_open = seq_open,
 	.proc_read = seq_read,
 	.proc_lseek = seq_lseek,
 	.proc_release = seq_release,
+	.proc_show = fault_stats_show, // proc_show is a direct member
 };
+
 /*
   * Thread groups
   */
