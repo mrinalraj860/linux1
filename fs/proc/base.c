@@ -3525,8 +3525,12 @@ static struct dentry *proc_pid_instantiate(struct dentry *dentry,
 	inode->i_op = &proc_tgid_base_inode_operations;
 	inode->i_fop = &proc_tgid_base_operations;
 	inode->i_flags |= S_IMMUTABLE;
-	proc_create_data("fault_stats", 0444, dentry->d_inode,
-			 &fault_stats_proc_ops, task);
+	struct proc_dir_entry *proc_pid = PDE(inode);
+
+	// Create your custom entry "fault_stats":
+	proc_create_data("fault_stats", 0444, proc_pid, &fault_stats_proc_ops,
+			 task);
+
 	set_nlink(inode, nlink_tgid);
 	pid_update_inode(task, inode);
 
