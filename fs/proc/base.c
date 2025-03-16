@@ -3856,7 +3856,7 @@ static struct dentry *proc_task_instantiate(struct dentry *dentry,
 	pid_update_inode(task, inode);
 	//CW
 	struct proc_dir_entry *proc_pid;
-	proc_pid = PDE(dentry->d_inode);
+	proc_pid = proc_mkdir(dentry->d_name.name, NULL);
 
 	/* ✅ Register the fault_stats file under /proc/<PID>/ */
 	if (proc_pid)
