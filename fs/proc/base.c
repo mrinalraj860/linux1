@@ -3320,12 +3320,6 @@ static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
 
 static const struct pid_entry tgid_base_stuff[] = {
-	{
-		.name = "fault_stats",
-		.len = sizeof("fault_stats") - 1,
-		.mode = S_IRUGO,
-		.proc_ops = &fault_stats_proc_ops,
-	},
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
 	DIR("fd", S_IRUSR | S_IXUSR, proc_fd_inode_operations,
@@ -3345,6 +3339,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 	ONE("status", S_IRUGO, proc_pid_status),
 	ONE("personality", S_IRUSR, proc_pid_personality),
 	ONE("limits", S_IRUGO, proc_pid_limits),
+	ONE("fault_stats", S_IRUGO, fault_stats_proc_ops),
 #ifdef CONFIG_SCHED_DEBUG
 	REG("sched", S_IRUGO | S_IWUSR, proc_pid_sched_operations),
 #endif
