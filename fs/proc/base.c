@@ -3294,6 +3294,10 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 #endif /* CONFIG_STACKLEAK_METRICS */
 //CW
 
+static int proc_pid_fault_stats(struct task_struct *task,
+				struct pid_namespace *ns,
+				struct proc_dir_entry *dir);
+
 static int fault_stats_show(struct seq_file *m, void *v)
 {
 	struct task_struct *task = m->private;
@@ -3309,20 +3313,24 @@ static int fault_stats_show(struct seq_file *m, void *v)
 
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
-	return single_open(file, fault_stats_show, PDE_DATA(inode));
+	return single_open(file, fault_stats_show, proc_get_parent_data(inode));
 }
 
-static const struct file_operations fault_stats_fops = {
-	.owner = THIS_MODULE,
-	.open = fault_stats_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
+// static const struct file_operations fault_stats_fops = {
+// 	.owner = THIS_MODULE,
+// 	.open = fault_stats_open,
+// 	.read = seq_read,
+// 	.llseek = seq_lseek,
+// 	.release = single_release,
+// };
+
+static const struct proc_ops fault_stats_proc_ops = {
+	.proc_open = fault_stats_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = single_release,
 };
 
-static int proc_pid_fault_stats(struct task_struct *task,
-				struct pid_namespace *ns,
-				struct proc_dir_entry *dir);
 /*
   * Thread groups
   */
@@ -3330,7 +3338,7 @@ static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
 
 static const struct pid_entry tgid_base_stuff[] = {
-	ONE("fault_stats", S_IRUGO, proc_pid_fault_stats),
+	NOD("fault_stats", S_IRUGO, proc_pid_fault_stats),
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
 	DIR("fd", S_IRUSR | S_IXUSR, proc_fd_inode_operations,
@@ -4063,6 +4071,6 @@ static int proc_pid_fault_stats(struct task_struct *task,
 				struct pid_namespace *ns,
 				struct proc_dir_entry *dir)
 {
-	proc_create_data("fault_stats", 0444, dir, &fault_stats_fops, task);
+	proc_create_data("fault_stats", 0444, dir, &fault_stats_proc_ops, task);
 	return 0;
 }
