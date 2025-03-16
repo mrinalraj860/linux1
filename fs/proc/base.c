@@ -3848,13 +3848,14 @@ static struct dentry *proc_task_instantiate(struct dentry *dentry,
 	//CW
 	struct proc_dir_entry *proc_pid;
 	/* ✅ Create the parent directory under /proc/<PID> */
-	proc_pid = proc_mkdir(dentry->d_name.name, NULL);
+	/* ✅ Correct parent directory using pid->proc_dir */
+	proc_pid = task->group_leader->self->proc_dir;
 	if (proc_pid) {
-		/* ✅ Register the fault_stats file under /proc/<PID> */
 		proc_create("fault_stats", 0444, proc_pid,
 			    &fault_stats_proc_ops);
+		pr_info("Created /proc/%d/fault_stats\n", task->pid);
 	} else {
-		pr_err("Failed to create /proc/<PID> directory\n");
+		pr_err("Failed to find /proc/%d directory\n", task->pid);
 	}
 
 	d_set_d_op(dentry, &pid_dentry_operations);
