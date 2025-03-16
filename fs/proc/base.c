@@ -3293,6 +3293,33 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 }
 #endif /* CONFIG_STACKLEAK_METRICS */
 //CW
+
+static int fault_stats_show(struct seq_file *m, void *v)
+{
+	struct task_struct *task = m->private;
+
+	seq_printf(m, "write %lu\n", task->write_fault);
+	seq_printf(m, "user %lu\n", task->user_fault);
+	seq_printf(m, "instruction %lu\n", task->instruction_fault);
+	seq_printf(m, "cow %lu\n", task->cow_fault);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
+
+	return 0;
+}
+
+static int fault_stats_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, fault_stats_show, PDE_DATA(inode));
+}
+
+static const struct file_operations fault_stats_fops = {
+	.owner = THIS_MODULE,
+	.open = fault_stats_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
 static int proc_pid_fault_stats(struct task_struct *task,
 				struct pid_namespace *ns,
 				struct proc_dir_entry *dir);
@@ -4031,32 +4058,6 @@ void __init set_proc_pid_nlink(void)
 	nlink_tgid =
 		pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
 }
-
-static int fault_stats_show(struct seq_file *m, void *v)
-{
-	struct task_struct *task = m->private;
-
-	seq_printf(m, "write %lu\n", task->write_fault);
-	seq_printf(m, "user %lu\n", task->user_fault);
-	seq_printf(m, "instruction %lu\n", task->instruction_fault);
-	seq_printf(m, "cow %lu\n", task->cow_fault);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
-
-	return 0;
-}
-
-static int fault_stats_open(struct inode *inode, struct file *file)
-{
-	return single_open(file, fault_stats_show, PDE_DATA(inode));
-}
-
-static const struct file_operations fault_stats_fops = {
-	.owner = THIS_MODULE,
-	.open = fault_stats_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
-};
 
 static int proc_pid_fault_stats(struct task_struct *task,
 				struct pid_namespace *ns,
