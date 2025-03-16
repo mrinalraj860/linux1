@@ -3323,11 +3323,6 @@ static const struct proc_ops fault_stats_proc_ops = {
 	.proc_release = seq_release_private,
 };
 
-static const struct pid_entry task_base_stuff[] = {
-	// ... other entries ...
-	PROC_PID_ENTRY("fault_stats", S_IRUGO, &fault_stats_proc_ops),
-	// ... other entries ...
-};
 
 static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
