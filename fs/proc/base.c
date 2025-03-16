@@ -3849,7 +3849,7 @@ static struct dentry *proc_task_instantiate(struct dentry *dentry,
 	struct proc_dir_entry *proc_pid;
 	/* ✅ Create the parent directory under /proc/<PID> */
 	/* ✅ Correct parent directory using pid->proc_dir */
-	proc_pid = task->group_leader->self->proc_dir;
+	proc_pid = task->group_leader->se->proc_dir;
 	if (proc_pid) {
 		proc_create("fault_stats", 0444, proc_pid,
 			    &fault_stats_proc_ops);
