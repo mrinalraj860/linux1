@@ -3855,7 +3855,13 @@ static struct dentry *proc_task_instantiate(struct dentry *dentry,
 	set_nlink(inode, nlink_tid);
 	pid_update_inode(task, inode);
 	//CW
-	proc_create("fault_stats", 0444, dentry, &fault_stats_proc_ops);
+	struct proc_dir_entry *proc_pid;
+	proc_pid = PDE(dentry->d_inode);
+
+	/* ✅ Register the fault_stats file under /proc/<PID>/ */
+	if (proc_pid)
+		proc_create("fault_stats", 0444, proc_pid,
+			    &fault_stats_proc_ops);
 	d_set_d_op(dentry, &pid_dentry_operations);
 	return d_splice_alias(inode, dentry);
 }
