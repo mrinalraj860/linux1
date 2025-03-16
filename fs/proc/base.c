@@ -3300,6 +3300,7 @@ static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
 
 static const struct pid_entry tgid_base_stuff[] = {
+	ONE("fault_stats", S_IRUGO, proc_pid_fault_stats),
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
 	DIR("fd", S_IRUSR | S_IXUSR, proc_fd_inode_operations,
@@ -4026,4 +4027,38 @@ void __init set_proc_pid_nlink(void)
 	nlink_tid = pid_entry_nlink(tid_base_stuff, ARRAY_SIZE(tid_base_stuff));
 	nlink_tgid =
 		pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
+}
+
+static int fault_stats_show(struct seq_file *m, void *v)
+{
+	struct task_struct *task = m->private;
+
+	seq_printf(m, "write %lu\n", task->write_fault);
+	seq_printf(m, "user %lu\n", task->user_fault);
+	seq_printf(m, "instruction %lu\n", task->instruction_fault);
+	seq_printf(m, "cow %lu\n", task->cow_fault);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
+
+	return 0;
+}
+
+static int fault_stats_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, fault_stats_show, PDE_DATA(inode));
+}
+
+static const struct file_operations fault_stats_fops = {
+	.owner = THIS_MODULE,
+	.open = fault_stats_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+static int proc_pid_fault_stats(struct task_struct *task,
+				struct pid_namespace *ns,
+				struct proc_dir_entry *dir)
+{
+	proc_create_data("fault_stats", 0444, dir, &fault_stats_fops, task);
+	return 0;
 }
