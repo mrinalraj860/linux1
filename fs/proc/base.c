@@ -3485,7 +3485,8 @@ void proc_flush_pid(struct pid *pid)
 
 static int fault_stats_show(struct seq_file *m, void *v)
 {
-	struct task_struct *task = get_proc_task(m->private);
+	struct task_struct *task = m->private;
+
 	if (!task)
 		return -ENOENT;
 
@@ -3495,7 +3496,6 @@ static int fault_stats_show(struct seq_file *m, void *v)
 	seq_printf(m, "cow %lu\n", task->cow_fault);
 	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
 
-	put_task_struct(task);
 	return 0;
 }
 
