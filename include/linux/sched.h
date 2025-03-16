@@ -932,6 +932,12 @@ struct task_struct {
 	struct mm_struct *mm;
 	struct mm_struct *active_mm;
 	struct address_space *faults_disabled_mapping;
+	//CW
+	unsigned long write_fault;
+	unsigned long user_fault;
+	unsigned long instruction_fault;
+	unsigned long cow_fault;
+	unsigned long mlocked_fault;
 
 	int exit_state;
 	int exit_code;

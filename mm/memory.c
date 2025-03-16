@@ -4812,6 +4812,10 @@ static vm_fault_t do_anonymous_page(struct vm_fault *vmf)
 	if (pte_alloc(vma->vm_mm, vmf->pmd))
 		return VM_FAULT_OOM;
 
+	//CW
+	if (vmf->vma->vm_flags & VM_LOCKED) {
+		vmf->vma->vm_mm->owner->mlocked_fault++
+	}
 	/* Use the zero-page for reads */
 	if (!(vmf->flags & FAULT_FLAG_WRITE) &&
 	    !mm_forbids_zeropage(vma->vm_mm)) {
@@ -5396,6 +5400,7 @@ static vm_fault_t do_cow_fault(struct vm_fault *vmf)
 	__folio_mark_uptodate(folio);
 
 	ret |= finish_fault(vmf);
+	vmf->vma->vm_mm->owner->cow_fault++;
 unlock:
 	unlock_page(vmf->page);
 	put_page(vmf->page);
@@ -6144,6 +6149,17 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 		mem_cgroup_enter_user_fault();
 
 	lru_gen_enter_fault(vma);
+
+	struct task_struct *task = current;
+	//CW
+	if (flags & FAULT_FLAG_WRITE)
+		task->write_fault++;
+
+	if (flags & FAULT_FLAG_USER)
+		task->user_fault++;
+
+	if (flags & FAULT_FLAG_INSTRUCTION)
+		task->instruction_fault++;
 
 	if (unlikely(is_vm_hugetlb_page(vma)))
 		ret = hugetlb_fault(vma->vm_mm, vma, address, flags);
