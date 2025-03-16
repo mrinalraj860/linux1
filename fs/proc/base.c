@@ -3299,9 +3299,8 @@ static int fault_stats_show(struct seq_file *m, void *v)
 	if (!task)
 		return -ENOENT;
 	seq_printf(m, "write %lu\n", task->write_fault);
-	seq_printf(m, "user %lu\n", task->user_faults;
-	seq_printf(m, "instruction %lu\n",
-		   task->instruction_fault);
+	seq_printf(m, "user %lu\n", task->user_fault);
+	seq_printf(m, "instruction %lu\n", task->instruction_fault);
 	seq_printf(m, "cow %lu\n", task->cow_fault);
 	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
 	return 0;
