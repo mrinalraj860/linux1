@@ -3680,25 +3680,16 @@ static int fault_stats_show(struct seq_file *m, void *v)
 	return 0;
 }
 
-/* 
-   * Step 2: Define seq_operations for fault_stats 
-   */
 static const struct seq_operations fault_stats_seq_ops = {
 	.show = fault_stats_show,
 };
 
-/* 
-   * Step 3: Define file open function 
-   */
 static int fault_stats_open(struct inode *inode, struct file *file)
 {
 	return seq_open_private(file, &fault_stats_seq_ops,
 				sizeof(struct task_struct));
 }
 
-/* 
-   * Step 4: Define file operations for proc entry 
-   */
 static const struct proc_ops fault_stats_proc_ops = {
 	.proc_open = fault_stats_open,
 	.proc_read = seq_read,
@@ -3856,11 +3847,8 @@ static struct dentry *proc_task_instantiate(struct dentry *dentry,
 	pid_update_inode(task, inode);
 	//CW
 	struct proc_dir_entry *proc_pid;
-	proc_pid = proc_mkdir(dentry->d_name.name, NULL);
-	struct proc_dir_entry *proc_pid;
-	proc_pid = proc_pid_lookup(task->tgid);
+	proc_pid = pid_task_proc(task);
 	if (proc_pid) {
-		/* ✅ Register the fault_stats file under /proc/<PID> */
 		proc_create("fault_stats", 0444, proc_pid,
 			    &fault_stats_proc_ops);
 	}
