@@ -3312,29 +3312,29 @@ static int fault_stats_show(struct seq_file *m, void *v)
 	return 0;
 }
 
-static const struct proc_ops task_fault_stats_ops = {
-	.proc_open = fault_stats_show,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = single_release,
-};
+// static const struct proc_ops task_fault_stats_ops = {
+// 	.proc_open = fault_stats_show,
+// 	.proc_read = seq_read,
+// 	.proc_lseek = seq_lseek,
+// 	.proc_release = single_release,
+// };
 
-static int proc_task_fault_stats(struct seq_file *m, struct pid_namespace *ns,
-				 struct pid *pid, struct task_struct *task)
-{
-	struct proc_dir_entry *entry;
+// static int proc_task_fault_stats(struct seq_file *m, struct pid_namespace *ns,
+// 				 struct pid *pid, struct task_struct *task)
+// {
+// 	struct proc_dir_entry *entry;
 
-	entry = proc_create_data("fault_stats", 0444, proc_pid_make_inode(task),
-				 &task_fault_stats_ops, task);
-	if (!entry)
-		return -ENOMEM;
+// 	entry = proc_create_data("fault_stats", 0444, proc_pid_make_inode(task),
+// 				 &task_fault_stats_ops, task);
+// 	if (!entry)
+// 		return -ENOMEM;
 
-	return 0;
-}
+// 	return 0;
+// }
 
-static const struct pid_entry tgid_base_stuff[] = {
-	TGID_ENTRY("fault_stats", S_IRUGO, proc_task_fault_stats),
-};
+// static const struct pid_entry tgid_base_stuff[] = {
+// 	TGID_ENTRY("fault_stats", S_IRUGO, proc_task_fault_stats),
+// };
 
 static const struct pid_entry tgid_base_stuff[] = {
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
@@ -3351,7 +3351,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 	DIR("net", S_IRUGO | S_IXUGO, proc_net_inode_operations,
 	    proc_net_operations),
 #endif
-	ONE("fault_stats", S_IRUGO, proc_task_fault_stats),
+	// ONE("fault_stats", S_IRUGO, proc_task_fault_stats),
 	REG("environ", S_IRUSR, proc_environ_operations),
 	REG("auxv", S_IRUSR, proc_auxv_operations),
 	ONE("status", S_IRUGO, proc_pid_status),
