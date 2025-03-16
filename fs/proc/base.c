@@ -3298,6 +3298,11 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 // 				struct pid_namespace *ns,
 // 				struct proc_dir_entry *dir);
 
+// int (*proc_show)(struct seq_file *m,
+// 	struct pid_namespace *ns,
+// 	struct pid *pid,
+// 	struct task_struct *task);
+
 static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
 			    struct pid *pid, struct task_struct *task)
 {
@@ -3321,7 +3326,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 		.name = "fault_stats",
 		.len = sizeof("fault_stats") - 1,
 		.mode = S_IRUGO,
-		.op.proc_show = fault_stats_show, // Register handler directly
+		.op.proc_show = fault_stats_show,
 	},
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
