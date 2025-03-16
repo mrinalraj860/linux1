@@ -3483,6 +3483,34 @@ void proc_flush_pid(struct pid *pid)
 	proc_invalidate_siblings_dcache(&pid->inodes, &pid->lock);
 }
 
+static int fault_stats_show(struct seq_file *m, void *v)
+{
+	struct task_struct *task = get_proc_task(m->private);
+	if (!task)
+		return -ENOENT;
+
+	seq_printf(m, "write %lu\n", task->write_fault);
+	seq_printf(m, "user %lu\n", task->user_fault);
+	seq_printf(m, "instruction %lu\n", task->instruction_fault);
+	seq_printf(m, "cow %lu\n", task->cow_fault);
+	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
+
+	put_task_struct(task);
+	return 0;
+}
+
+static int fault_stats_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, fault_stats_show, PDE_DATA(inode));
+}
+
+static const struct proc_ops fault_stats_proc_ops = {
+	.proc_open = fault_stats_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = single_release,
+};
+
 static struct dentry *proc_pid_instantiate(struct dentry *dentry,
 					   struct task_struct *task,
 					   const void *ptr)
@@ -3497,7 +3525,7 @@ static struct dentry *proc_pid_instantiate(struct dentry *dentry,
 	inode->i_op = &proc_tgid_base_inode_operations;
 	inode->i_fop = &proc_tgid_base_operations;
 	inode->i_flags |= S_IMMUTABLE;
-	proc_create_data("fault_stats", 0444, proc_pid_dir(task->pid),
+	proc_create_data("fault_stats", 0444, dentry->d_inode,
 			 &fault_stats_proc_ops, task);
 	set_nlink(inode, nlink_tgid);
 	pid_update_inode(task, inode);
@@ -3664,39 +3692,6 @@ static const struct inode_operations proc_tid_comm_inode_operations = {
 /*
   * Tasks
   */
-
-static int fault_stats_show(struct seq_file *m, void *v)
-{
-	struct task_struct *task = m->private;
-
-	if (!task)
-		return -ENOENT;
-
-	seq_printf(m, "write %lu\n", task->write_fault);
-	seq_printf(m, "user %lu\n", task->user_fault);
-	seq_printf(m, "instruction %lu\n", task->instruction_fault);
-	seq_printf(m, "cow %lu\n", task->cow_fault);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
-
-	return 0;
-}
-
-static const struct seq_operations fault_stats_seq_ops = {
-	.show = fault_stats_show,
-};
-
-static int fault_stats_open(struct inode *inode, struct file *file)
-{
-	return seq_open_private(file, &fault_stats_seq_ops,
-				sizeof(struct task_struct));
-}
-
-static const struct proc_ops fault_stats_proc_ops = {
-	.proc_open = fault_stats_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = seq_release_private,
-};
 
 static const struct pid_entry tid_base_stuff[] = {
 	DIR("fd", S_IRUSR | S_IXUSR, proc_fd_inode_operations,
