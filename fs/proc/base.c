@@ -3296,21 +3296,21 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
 
-static int fault_stats_show(struct seq_file *m, void *v)
-{
-	struct task_struct *task = m->private;
+// static int fault_stats_show(struct seq_file *m, void *v)
+// {
+// 	struct task_struct *task = m->private;
 
-	if (!task)
-		return -ENOENT;
+// 	if (!task)
+// 		return -ENOENT;
 
-	seq_printf(m, "write %lu\n", task->write_fault);
-	seq_printf(m, "user %lu\n", task->user_fault);
-	seq_printf(m, "instruction %lu\n", task->instruction_fault);
-	seq_printf(m, "cow %lu\n", task->cow_fault);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
+// 	seq_printf(m, "write %lu\n", task->write_fault);
+// 	seq_printf(m, "user %lu\n", task->user_fault);
+// 	seq_printf(m, "instruction %lu\n", task->instruction_fault);
+// 	seq_printf(m, "cow %lu\n", task->cow_fault);
+// 	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
 
-	return 0;
-}
+// 	return 0;
+// }
 
 // static const struct proc_ops task_fault_stats_ops = {
 // 	.proc_open = fault_stats_show,
