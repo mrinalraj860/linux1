@@ -3305,26 +3305,26 @@ static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
 	return 0;
 }
 
-static int __init proc_task_init(void)
-{
-	int ret = proc_register_tgid_base(tgid_base_stuff,
-					  ARRAY_SIZE(tgid_base_stuff));
-	if (ret) {
-		pr_err("Failed to register /proc/<PID>/fault_stats\n");
-	} else {
-		pr_info("/proc/<PID>/fault_stats registered successfully\n");
-	}
+// static int __init proc_task_init(void)
+// {
+// 	int ret = proc_register_tgid_base(tgid_base_stuff,
+// 					  ARRAY_SIZE(tgid_base_stuff));
+// 	if (ret) {
+// 		pr_err("Failed to register /proc/<PID>/fault_stats\n");
+// 	} else {
+// 		pr_info("/proc/<PID>/fault_stats registered successfully\n");
+// 	}
 
-	return ret;
-}
+// 	return ret;
+// }
 
-static void __exit proc_task_exit(void)
-{
-	pr_info("/proc/<PID>/fault_stats removed\n");
-}
+// static void __exit proc_task_exit(void)
+// {
+// 	pr_info("/proc/<PID>/fault_stats removed\n");
+// }
 
-module_init(proc_task_init);
-module_exit(proc_task_exit);
+// module_init(proc_task_init);
+// module_exit(proc_task_exit);
 
 /*
   * Thread groups
