@@ -3298,8 +3298,8 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 // 				struct pid_namespace *ns,
 // 				struct proc_dir_entry *dir);
 
-static int fault_stats_wrapper(struct seq_file *m, struct pid_namespace *ns,
-			       struct pid *pid, struct task_struct *task)
+static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
+			    struct pid *pid, struct task_struct *task)
 {
 	seq_printf(m, "write %lu\n", task->write_fault);
 	seq_printf(m, "user %lu\n", task->user_fault);
@@ -3330,6 +3330,13 @@ static const struct proc_ops fault_stats_proc_ops = {
 	.proc_release = single_release,
 };
 
+static int proc_pid_fault_stats(struct task_struct *task,
+				struct pid_namespace *ns,
+				struct proc_dir_entry *dir)
+{
+	proc_create_data("fault_stats", 0444, dir, &fault_stats_proc_ops, task);
+	return 0;
+}
 /*
   * Thread groups
   */
@@ -3341,7 +3348,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 		.name = "fault_stats",
 		.len = sizeof("fault_stats") - 1,
 		.mode = S_IRUGO,
-		.op.proc_show = fault_stats_wrapper,
+		.op.proc_show = fault_stats_show, // Register handler directly
 	},
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
 	    proc_task_operations),
