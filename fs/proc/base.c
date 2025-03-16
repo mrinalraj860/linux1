@@ -3310,33 +3310,6 @@ static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
 	return 0;
 }
 
-static int fault_stats_open(struct inode *inode, struct file *file)
-{
-	return single_open(file, fault_stats_wrapper,
-			   proc_get_parent_data(inode));
-}
-
-// static const struct file_operations fault_stats_fops = {
-// 	.owner = THIS_MODULE,
-// 	.open = fault_stats_open,
-// 	.read = seq_read,
-// 	.llseek = seq_lseek,
-// 	.release = single_release,
-// };
-
-static const struct proc_ops fault_stats_proc_ops = {
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = single_release,
-};
-
-static int proc_pid_fault_stats(struct task_struct *task,
-				struct pid_namespace *ns,
-				struct proc_dir_entry *dir)
-{
-	proc_create_data("fault_stats", 0444, dir, &fault_stats_proc_ops, task);
-	return 0;
-}
 /*
   * Thread groups
   */
@@ -4077,11 +4050,3 @@ void __init set_proc_pid_nlink(void)
 	nlink_tgid =
 		pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
 }
-
-// static int proc_pid_fault_stats(struct task_struct *task,
-// 				struct pid_namespace *ns,
-// 				struct proc_dir_entry *dir)
-// {
-// 	proc_create_data("fault_stats", 0444, dir, &fault_stats_proc_ops, task);
-// 	return 0;
-// }
