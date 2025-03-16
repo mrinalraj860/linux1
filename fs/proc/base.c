@@ -3293,40 +3293,43 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
 }
 #endif /* CONFIG_STACKLEAK_METRICS */
 //CW
-
-static int fault_stats_show(struct seq_file *m, struct pid_namespace *ns,
-			    struct pid *pid, struct task_struct *task)
+static int fault_stats_show(struct seq_file *m, void *v)
 {
+	struct task_struct *task =
+		m->private; // Get task from seq_file's private data
 	if (!task)
 		return -ENOENT;
-
-	// unsigned long write_fault;
-	// unsigned long user_fault;
-	// unsigned long instruction_fault;
-	// unsigned long cow_fault;
-	// unsigned long mlocked_fault;
-	seq_printf(m, "write %lu\n", task->write_fault);
-	seq_printf(m, "user %lu\n", task->user_fault);
-	seq_printf(m, "instruction %lu\n", task->instruction_fault);
-	seq_printf(m, "cow %lu\n", task->cow_fault);
-	seq_printf(m, "mlocked %lu\n", task->mlocked_fault);
+	seq_printf(m, "write %lu\n", task->fault_counts.write_faults);
+	seq_printf(m, "user %lu\n", task->fault_counts.user_faults);
+	seq_printf(m, "instruction %lu\n",
+		   task->fault_counts.instruction_faults);
+	seq_printf(m, "cow %lu\n", task->fault_counts.cow_faults);
+	seq_printf(m, "mlocked %lu\n", task->fault_counts.mlocked_faults);
 	return 0;
 }
 
-static const struct proc_ops fault_stats_proc_ops = {
-	.proc_open = seq_open,
-	.proc_read = seq_read,
-	.proc_lseek = seq_lseek,
-	.proc_release = seq_release,
-	.proc_show = fault_stats_show, // proc_show is a direct member
+static const struct seq_operations fault_stats_seq_ops = {
+	.show = fault_stats_show,
 };
 
+static int fault_stats_open(struct inode *inode, struct file *file)
+{
+	return seq_open_private(file, &fault_stats_seq_ops, PDE_TASK(inode));
+}
+
+static const struct proc_ops fault_stats_proc_ops = {
+	.proc_open = fault_stats_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = seq_release_private,
+};
+
+PROC_PID_ENTRY("fault_stats", S_IRUGO, &fault_stats_proc_ops);
 /*
   * Thread groups
   */
 static const struct file_operations proc_task_operations;
 static const struct inode_operations proc_task_inode_operations;
-PROC_PID_ENTRY("fault_stats", S_IRUGO, &fault_stats_proc_ops);
 
 static const struct pid_entry tgid_base_stuff[] = {
 	DIR("task", S_IRUGO | S_IXUGO, proc_task_inode_operations,
